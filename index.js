@@ -28,6 +28,8 @@ const path = require('path');
 const ghme = client.me();
 const ghorg = client.org(options.org);
 
+const rootPath = process.cwd();
+
 client.get('/user', {}, function (err, status, body, headers) {
     console.log(`Welcome ${body.name}\n\r`);
 
@@ -51,7 +53,7 @@ client.get('/user', {}, function (err, status, body, headers) {
                 data.forEach(branch => {
                     console.log(`${repository.name} => ${repository.html_url} (${branch.name})`);
                     let repoURL = `https://${options.usr}:${options.pwd}@github.com/${options.org}/${repository.name}.git`;
-                    let destPath = path.join(process.cwd(), `${options.org}_${repository.name}_${branch.name}`);
+                    let destPath = path.join(rootPath, `${options.org}_${repository.name}_${branch.name}`);
 
                     // cleanup branch
                     rimraf.sync(destPath);
@@ -66,7 +68,7 @@ client.get('/user', {}, function (err, status, body, headers) {
                         childProcess.execFileSync('git', ['checkout', branch.name], {
                             env: process.env
                         });
-                        process.chdir(process.cwd());
+                        process.chdir(rootPath);
                     }
                 });
             });
