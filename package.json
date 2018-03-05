@@ -1,0 +1,31 @@
+{
+  "name": "git-pull-all",
+  "version": "0.0.1",
+  "description": "Pull all organization branches from GitHub",
+  "main": "index.js",
+  "preferGlobal": true,
+  "directories": {
+    "bin": "./bin"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+	"git"
+  ],
+  "author": "Jean C. Solís <jcsolisu2000@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/jsolisu/git-pull-all.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jsolisu/git-pull-all/issues"
+  },
+  "homepage": "https://github.com/jsolisu/git-pull-all#readme",
+  "dependencies": {
+    "octonode": "^0.9.1",
+    "rimraf": "^2.6.2",
+    "yargs": "^11.0.0"
+  }
+}
