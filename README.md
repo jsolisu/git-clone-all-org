@@ -1,2 +1,2 @@
-# git-pull-all
-Pull all organization branches from GitHub
+# github-clone-all-org
+Clone all organization branches from GitHub

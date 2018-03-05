@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *---------------------------------------------------------------------------------------------- */
 
-console.log(`git-pull-all (GitHub) version ${require('./package.json').version}\n\r(c) 2018 JSolisU. MIT License.\n\r`);
+console.log(`github-clone-all-org (GitHub) version ${require('./package.json').version}\n\r(c) 2018 JSolisU. MIT License.\n\r`);
 const options = require('yargs')
     .usage('Usage: $0 [options]')
     .alias('o', 'org')

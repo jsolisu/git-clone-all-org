@@ -1,7 +1,7 @@
 {
-  "name": "git-pull-all",
+  "name": "github-clone-all-org",
   "version": "0.0.1",
-  "description": "Pull all organization branches from GitHub",
+  "description": "Clone all organization branches from GitHub",
   "main": "index.js",
   "preferGlobal": true,
   "directories": {
@@ -17,12 +17,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/jsolisu/git-pull-all.git"
+    "url": "git+ssh://git@github.com/jsolisu/github-clone-all-org.git"
   },
   "bugs": {
-    "url": "https://github.com/jsolisu/git-pull-all/issues"
+    "url": "https://github.com/jsolisu/github-clone-all-org/issues"
   },
-  "homepage": "https://github.com/jsolisu/git-pull-all#readme",
+  "homepage": "https://github.com/jsolisu/github-clone-all-org#readme",
   "dependencies": {
     "octonode": "^0.9.1",
     "rimraf": "^2.6.2",
