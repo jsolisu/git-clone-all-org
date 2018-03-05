@@ -1,2 +1,7 @@
 #!/usr/bin/env node
+/* ---------------------------------------------------------------------------------------------
+ *  Copyright (c) JSolisU. All rights reserved.
+ *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
+ *---------------------------------------------------------------------------------------------- */
+
 require('./../index.js');
