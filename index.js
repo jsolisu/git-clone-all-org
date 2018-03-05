@@ -51,7 +51,7 @@ client.get('/user', {}, function (err, status, body, headers) {
                 data.forEach(branch => {
                     console.log(`${repository.name} => ${repository.html_url} (${branch.name})`);
                     let repoURL = `https://${options.usr}:${options.pwd}@github.com/${options.org}/${repository.name}.git`;
-                    let destPath = path.join(__dirname, `${options.org}_${repository.name}_${branch.name}`);
+                    let destPath = path.join(process.cwd(), `${options.org}_${repository.name}_${branch.name}`);
 
                     // cleanup branch
                     rimraf.sync(destPath);
@@ -66,7 +66,7 @@ client.get('/user', {}, function (err, status, body, headers) {
                         childProcess.execFileSync('git', ['checkout', branch.name], {
                             env: process.env
                         });
-                        process.chdir(__dirname);
+                        process.chdir(process.cwd());
                     }
                 });
             });
