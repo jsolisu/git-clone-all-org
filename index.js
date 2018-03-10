@@ -12,6 +12,8 @@ const options = require('yargs')
     .describe('u', 'GitHub username')
     .alias('p', 'pwd')
     .describe('p', 'GitHub password')
+    .alias('d', 'dest')
+    .describe('d', 'Destination path')
     .help('h')
     .demandOption(['o', 'u', 'p'])
     .argv;
@@ -24,11 +26,20 @@ const client = github.client({
 const childProcess = require('child_process');
 const rimraf = require('rimraf');
 const path = require('path');
+const fs = require('fs');
 
 const ghme = client.me();
 const ghorg = client.org(options.org);
 
-const rootPath = process.cwd();
+let rootPath = process.cwd();
+if (options.dest) {
+    if (fs.existsSync(options.dest)) {
+        rootPath = options.dest;
+    } else {
+        console.log(`Path <${options.dest}> not found.`);
+        process.exit(-1);
+    }
+}
 
 client.get('/user', {}, function (err, status, body, headers) {
     console.log(`Welcome ${body.name}\n\r`);

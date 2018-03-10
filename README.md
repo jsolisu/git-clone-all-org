@@ -8,5 +8,5 @@ sudo npm install -g github-clone-all-org
 ```
 
 ```
-github-clone-all-org -o <organization> -u <user> -p <password>
+github-clone-all-org -o <organization> -u <user> -p <password> [-d <destination path>]
 ```
