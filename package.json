@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/jsolisu/github-clone-all-org#readme",
   "dependencies": {
+    "command-exists": "^1.2.2",
     "octonode": "^0.9.2",
     "rimraf": "^2.6.2",
     "yargs": "^11.0.0"
