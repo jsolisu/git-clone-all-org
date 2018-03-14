@@ -49,6 +49,8 @@ function setRootPath () {
       } else {
         reject(new Error(`Path <${options.dest}> not found.`));
       }
+    } else {
+      resolve(rootPath);
     }
   });
 }
