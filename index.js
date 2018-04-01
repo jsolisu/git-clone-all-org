@@ -96,37 +96,41 @@ function getRepositories () {
         reject(new Error('No repositories found.'));
       } else {
         console.log('\n\rRepositories:\n\r');
+        let p = Promise.resolve();
         data.forEach(repository => {
-          let ghrepo = client.repo(`${options.org}/${repository.name}`);
-          ghrepo.branches((err, data, header) => {
-            if (err) {
-              // TODO
-            } else {
-              data.forEach(branch => {
-                console.log(`${repository.name} => ${repository.html_url} (${branch.name})`);
-                let repoURL = `https://${options.usr}:${options.pwd}@github.com/${options.org}/${repository.name}.git`;
-                let destPath = path.join(rootPath, `${options.org}_${repository.name}_${branch.name}`);
+          p = p.then(() => new Promise(resolve => {
+            let ghrepo = client.repo(`${options.org}/${repository.name}`);
+            ghrepo.branches((err, data, header) => {
+              if (err) {
+                // TODO
+              } else {
+                data.forEach(branch => {
+                  console.log(`${repository.name} => ${repository.html_url} (${branch.name})`);
+                  let repoURL = `https://${options.usr}:${options.pwd}@github.com/${options.org}/${repository.name}.git`;
+                  let destPath = path.join(rootPath, `${options.org}_${repository.name}_${branch.name}`);
 
-                // cleanup branch
-                rimraf.sync(destPath);
+                  // cleanup branch
+                  rimraf.sync(destPath);
 
-                childProcess.execFileSync('git', ['clone', repoURL, destPath], {
-                  env: process.env
-                });
-
-                // If the branch is master, it is already cloned
-                if (branch.name !== 'master') {
-                  process.chdir(destPath);
-                  childProcess.execFileSync('git', ['checkout', branch.name], {
+                  childProcess.execFileSync('git', ['clone', repoURL, destPath], {
                     env: process.env
                   });
-                  process.chdir(rootPath);
-                }
-              });
-            }
-          });
+
+                  // If the branch is master, it is already cloned
+                  if (branch.name !== 'master') {
+                    process.chdir(destPath);
+                    childProcess.execFileSync('git', ['checkout', branch.name], {
+                      env: process.env
+                    });
+                    process.chdir(rootPath);
+                  }
+                });
+              }
+              resolve();
+            });
+          }));
         });
-        resolve(data);
+        p.then(() => { resolve(data); });
       }
     });
   });
@@ -138,5 +142,6 @@ function getRepositories () {
     .then(() => getUserInfo())
     .then(() => getOrgInfo())
     .then(() => getRepositories())
+    .then(() => console.log('Done.'))
     .catch(error => console.log(error.message));
 })();
