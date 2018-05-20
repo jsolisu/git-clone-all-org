@@ -59,7 +59,7 @@ function getUserInfo () {
   return new Promise((resolve, reject) => {
     client.get('/user', {}, function (err, status, body, headers) {
       if (err) {
-        reject(new Error('User not found.'));
+        reject(new Error(`getUserInfo: ${err}`));
       } else {
         console.log(`Welcome ${body.name}\n\r`);
         resolve(body);
@@ -72,7 +72,7 @@ function getOrgInfo () {
   return new Promise((resolve, reject) => {
     ghorg.info((err, data, header) => {
       if (err) {
-        reject(new Error('Organization not found.'));
+        reject(new Error(`getOrgInfo: ${err}`));
       } else {
         console.log(`Info for [${data.login}] organization:`);
         console.log(`* Description: ${data.description}`);
@@ -93,7 +93,7 @@ function getRepositories () {
   return new Promise((resolve, reject) => {
     ghorg.repos((err, data, header) => {
       if (err) {
-        reject(new Error('No repositories found.'));
+        reject(new Error(`getRepositories: ${err}`));
       } else {
         console.log('\n\rRepositories:\n\r');
         let p = Promise.resolve();
