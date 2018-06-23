@@ -1,14 +1,22 @@
 # github-clone-all-org
 Clone all organization branches from GitHub.
 
-### Usage
+### Installation
 
+Windows
+```
+npm install -g github-clone-all-org
+```
+
+Linux
 ```
 sudo npm install -g github-clone-all-org
 ```
 
+### Usage
+
 ```
-Usage: github-clone-all-org [options]
+github-clone-all-org [options]
 
 Options:
   --version   Show version number
