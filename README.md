@@ -24,5 +24,6 @@ Options:
   -u, --usr   GitHub username    
   -p, --pwd   GitHub password    
   -d, --dest  Destination path
+  -c, --clean Clean destination path
   -h          Show help          
 ```

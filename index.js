@@ -14,6 +14,8 @@ const options = require('yargs')
   .describe('p', 'GitHub password')
   .alias('d', 'dest')
   .describe('d', 'Destination path')
+  .alias('c', 'clean')
+  .describe('c', 'Clean destination path')
   .help('h')
   .demandOption(['o', 'u', 'p'])
   .argv;
@@ -28,6 +30,7 @@ const rimraf = require('rimraf');
 const path = require('path');
 const fs = require('fs');
 const commandExists = require('command-exists');
+const glob = require('glob');
 
 const ghorg = client.org(options.org);
 
@@ -91,6 +94,20 @@ function getOrgInfo () {
 
 function getRepositories () {
   return new Promise((resolve, reject) => {
+    // Clean destination path?
+    if (options.clean) {
+      fs.readdir(rootPath, function(err, files) {
+        files.map(function(file) {
+          return path.join(rootPath, file);
+        }).filter(function(file) {
+          return fs.statSync(file).isDirectory();
+        }).forEach(function(file) {
+          console.log(`Deleting path <${file}>...`)
+          rimraf.sync(file);
+        });
+      });
+    }
+    
     ghorg.repos((err, data, header) => {
       if (err) {
         reject(new Error(`getRepositories: ${err}`));
