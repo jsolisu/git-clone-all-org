@@ -13,7 +13,7 @@ const options = require('yargs')
   .alias('p', 'pwd')
   .describe('p', 'GitHub password')
   .alias('d', 'dest')
-  .describe('d', 'Destination path')
+  .describe('d', 'Destination path (-d "c:\\temp")')
   .alias('c', 'clean')
   .describe('c', 'Clean destination path')
   .help('h')
@@ -30,11 +30,18 @@ const rimraf = require('rimraf');
 const path = require('path');
 const fs = require('fs');
 const commandExists = require('command-exists');
-const glob = require('glob');
 
 const ghorg = client.org(options.org);
 
-let rootPath = process.cwd();
+function fixPath (pathToFix) {
+  if (process.platform === 'win32') {
+    return pathToFix.replace(/\\/g, '\\\\');
+  } else {
+    return pathToFix;
+  }
+}
+
+let rootPath = fixPath(process.cwd());
 
 function checkForGit () {
   return commandExists('git')
@@ -47,8 +54,8 @@ function setRootPath () {
   return new Promise((resolve, reject) => {
     if (options.dest) {
       if (fs.existsSync(options.dest)) {
-        rootPath = options.dest;
-        resolve(options.dest);
+        rootPath = fixPath(options.dest);
+        resolve(rootPath);
       } else {
         reject(new Error(`Path <${options.dest}> not found.`));
       }
@@ -86,6 +93,7 @@ function getOrgInfo () {
         console.log(`* Plan filled seats: ${data.plan.filled_seats}`);
         console.log(`* Default repository permission: ${data.default_repository_permission}`);
         console.log(`* Members can create repositories: ${data.members_can_create_repositories}`);
+        console.log('\n\r');
         resolve(data);
       }
     });
@@ -96,18 +104,20 @@ function getRepositories () {
   return new Promise((resolve, reject) => {
     // Clean destination path?
     if (options.dest && options.clean) {
-      fs.readdir(rootPath, function(err, files) {
-        files.map(function(file) {
-          return path.join(rootPath, file);
-        }).filter(function(file) {
-          return fs.statSync(file).isDirectory();
-        }).forEach(function(file) {
-          console.log(`Deleting path <${file}>...`)
-          rimraf.sync(file);
-        });
+      fs.readdir(rootPath, function (err, files) {
+        if (!err) {
+          files.map(function (file) {
+            return path.join(rootPath, file);
+          }).filter(function (file) {
+            return fs.statSync(file).isDirectory();
+          }).forEach(function (file) {
+            console.log(`Deleting path <${file}>...`);
+            rimraf.sync(file);
+          });
+        }
       });
     }
-    
+
     ghorg.repos((err, data, header) => {
       if (err) {
         reject(new Error(`getRepositories: ${err}`));
@@ -147,7 +157,9 @@ function getRepositories () {
             });
           }));
         });
-        p.then(() => { resolve(data); });
+        p.then(() => {
+          resolve(data);
+        });
       }
     });
   });
