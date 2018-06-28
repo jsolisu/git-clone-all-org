@@ -95,7 +95,7 @@ function getOrgInfo () {
 function getRepositories () {
   return new Promise((resolve, reject) => {
     // Clean destination path?
-    if (options.clean) {
+    if (options.dest && options.clean) {
       fs.readdir(rootPath, function(err, files) {
         files.map(function(file) {
           return path.join(rootPath, file);
