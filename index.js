@@ -120,6 +120,23 @@ function getOrgMembers () {
   });
 }
 
+function cleanDestination () {
+  if (options.dest && options.clean) {
+    fs.readdir(rootPath, function (err, files) {
+      if (!err) {
+        files.map(function (file) {
+          return path.join(rootPath, file);
+        }).filter(function (file) {
+          return fs.statSync(file).isDirectory();
+        }).forEach(function (file) {
+          console.log(`Deleting path <${file}>...`);
+          rimraf.sync(file);
+        });
+      }
+    });
+  }
+}
+
 function getRepositories () {
   const logFile = path.join(rootPath, 'github_clone_all_org.log');
 
@@ -129,21 +146,7 @@ function getRepositories () {
       file = fs.openSync(logFile, 'w');
     }
 
-    // Clean destination path?
-    if (options.dest && options.clean) {
-      fs.readdir(rootPath, function (err, files) {
-        if (!err) {
-          files.map(function (file) {
-            return path.join(rootPath, file);
-          }).filter(function (file) {
-            return fs.statSync(file).isDirectory();
-          }).forEach(function (file) {
-            console.log(`Deleting path <${file}>...`);
-            rimraf.sync(file);
-          });
-        }
-      });
-    }
+    cleanDestination();
 
     ghorg.repos((err, data, header) => {
       if (err) {
