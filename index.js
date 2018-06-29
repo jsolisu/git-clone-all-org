@@ -34,6 +34,10 @@ const fs = require('fs');
 const commandExists = require('command-exists');
 
 const ghorg = client.org(options.org);
+ghorg.extra = {
+  info: null,
+  members: null
+};
 
 function fixPath (pathToFix) {
   if (process.platform === 'win32') {
@@ -86,6 +90,7 @@ function getOrgInfo () {
       if (err) {
         reject(new Error(`getOrgInfo: ${err}`));
       } else {
+        ghorg.extra.info = data;
         console.log(`Info for [${data.login}] organization:`);
         console.log(`* Description: ${data.description}`);
         console.log(`* Url: ${data.html_url}`);
@@ -96,6 +101,19 @@ function getOrgInfo () {
         console.log(`* Default repository permission: ${data.default_repository_permission}`);
         console.log(`* Members can create repositories: ${data.members_can_create_repositories}`);
         console.log('\n\r');
+        resolve(data);
+      }
+    });
+  });
+}
+
+function getOrgMembers () {
+  return new Promise((resolve, reject) => {
+    ghorg.members((err, data) => {
+      if (err) {
+        reject(new Error(`getOrgMembers: ${err}`));
+      } else {
+        ghorg.extra.members = data;
         resolve(data);
       }
     });
@@ -189,6 +207,7 @@ function getRepositories () {
     .then(() => setRootPath())
     .then(() => getUserInfo())
     .then(() => getOrgInfo())
+    .then(() => getOrgMembers())
     .then(() => getRepositories())
     .then(() => console.log('Done.'))
     .catch(error => console.log(error.message));
