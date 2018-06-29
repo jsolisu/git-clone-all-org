@@ -223,9 +223,9 @@ function getRepositories () {
                       }
                     });
 
-                    if (count == 0) {
+                    if (count === 0) {
                       sendToLog(`No commits.`);
-                    } 
+                    }
                     sendToLog('');
                   }
 
