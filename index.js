@@ -13,7 +13,11 @@ const options = require('yargs')
   .alias('p', 'pwd')
   .describe('p', 'GitHub password')
   .alias('d', 'dest')
-  .describe('d', 'Destination path')
+  .describe('d', 'Destination path (-d "c:\\temp")')
+  .alias('c', 'clean')
+  .describe('c', 'Clean destination path')
+  .alias('l', 'log')
+  .describe('l', 'Generate log')
   .help('h')
   .demandOption(['o', 'u', 'p'])
   .argv;
@@ -31,7 +35,22 @@ const commandExists = require('command-exists');
 
 const ghorg = client.org(options.org);
 
-let rootPath = process.cwd();
+function fixPath (pathToFix) {
+  if (process.platform === 'win32') {
+    return pathToFix.replace(/\\/g, '\\\\');
+  } else {
+    return pathToFix;
+  }
+}
+
+let rootPath = fixPath(process.cwd());
+
+function convertUnixDateTime (datetime) {
+  let d = new Date(datetime * 1000);
+  let utc = d.getTime() + (d.getTimezoneOffset() * 60000); // This converts to UTC 00:00
+  let nd = new Date(utc + (3600000 * 6));
+  return nd.toLocaleString();
+}
 
 function checkForGit () {
   return commandExists('git')
@@ -44,8 +63,8 @@ function setRootPath () {
   return new Promise((resolve, reject) => {
     if (options.dest) {
       if (fs.existsSync(options.dest)) {
-        rootPath = options.dest;
-        resolve(options.dest);
+        rootPath = fixPath(options.dest);
+        resolve(rootPath);
       } else {
         reject(new Error(`Path <${options.dest}> not found.`));
       }
@@ -83,6 +102,7 @@ function getOrgInfo () {
         console.log(`* Plan filled seats: ${data.plan.filled_seats}`);
         console.log(`* Default repository permission: ${data.default_repository_permission}`);
         console.log(`* Members can create repositories: ${data.members_can_create_repositories}`);
+        console.log('\n\r');
         resolve(data);
       }
     });
@@ -90,7 +110,30 @@ function getOrgInfo () {
 }
 
 function getRepositories () {
+  const logFile = path.join(rootPath, 'github_clone_all_org.log');
+
   return new Promise((resolve, reject) => {
+    var file;
+    if (options.log) {
+      file = fs.openSync(logFile, 'w');
+    }
+
+    // Clean destination path?
+    if (options.dest && options.clean) {
+      fs.readdir(rootPath, function (err, files) {
+        if (!err) {
+          files.map(function (file) {
+            return path.join(rootPath, file);
+          }).filter(function (file) {
+            return fs.statSync(file).isDirectory();
+          }).forEach(function (file) {
+            console.log(`Deleting path <${file}>...`);
+            rimraf.sync(file);
+          });
+        }
+      });
+    }
+
     ghorg.repos((err, data, header) => {
       if (err) {
         reject(new Error(`getRepositories: ${err}`));
@@ -117,20 +160,32 @@ function getRepositories () {
                   });
 
                   // If the branch is master, it is already cloned
+                  process.chdir(destPath);
                   if (branch.name !== 'master') {
-                    process.chdir(destPath);
                     childProcess.execFileSync('git', ['checkout', branch.name], {
                       env: process.env
                     });
-                    process.chdir(rootPath);
                   }
+
+                  // Generate log
+                  if (options.log) {
+                    let res = childProcess.execFileSync('git', ['log', '-1', '--pretty=format:%cI,%an,%ae,%s,%b']).toString().split(',');
+                    fs.writeSync(file, `Repository: ${repository.name}, Branch: ${branch.name}, Last commit: ${new Date(res[0]).toString()} by -${res[1]}-\n\r`);
+                  }
+
+                  process.chdir(rootPath);
                 });
               }
               resolve();
             });
           }));
         });
-        p.then(() => { resolve(data); });
+        p.then(() => {
+          if (options.log) {
+            fs.closeSync(file);
+          }
+          resolve(data);
+        });
       }
     });
   });
