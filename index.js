@@ -3,7 +3,9 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *---------------------------------------------------------------------------------------------- */
 
-console.log(`github-clone-all-org (GitHub) version ${require('./package.json').version}\n\r(c) 2018 JSolisU. MIT License.\n\r`);
+const os = require('os');
+
+console.log(`github-clone-all-org (GitHub) version ${require('./package.json').version}${os.EOL}(c) 2018 JSolisU. MIT License.${os.EOL}`);
 const options = require('yargs')
   .usage('Usage: $0 [options]')
   .alias('o', 'org')
@@ -38,6 +40,8 @@ ghorg.extra = {
   info: null,
   members: null
 };
+
+let logFile = null;
 
 function fixPath (pathToFix) {
   if (process.platform === 'win32') {
@@ -77,7 +81,7 @@ function getUserInfo () {
       if (err) {
         reject(new Error(`getUserInfo: ${err}`));
       } else {
-        console.log(`Welcome ${body.name}\n\r`);
+        console.log(`Welcome ${body.name}${os.EOL}`);
         resolve(body);
       }
     });
@@ -100,7 +104,7 @@ function getOrgInfo () {
         console.log(`* Plan filled seats: ${data.plan.filled_seats}`);
         console.log(`* Default repository permission: ${data.default_repository_permission}`);
         console.log(`* Members can create repositories: ${data.members_can_create_repositories}`);
-        console.log('\n\r');
+        console.log();
         resolve(data);
       }
     });
@@ -137,22 +141,36 @@ function cleanDestination () {
   }
 }
 
+/* Log File: Begin */
+function startLog () {
+  if (options.log) {
+    logFile = fs.openSync(path.join(rootPath, 'github_clone_all_org.log'), 'w');
+  }
+}
+
+function sendToLog (s) {
+  fs.writeSync(logFile, `${s}${os.EOL}`);
+}
+
+function endLog () {
+  if (options.log) {
+    fs.closeSync(logFile);
+  }
+}
+
+/* Log File: End */
+
 function getRepositories () {
-  const logFile = path.join(rootPath, 'github_clone_all_org.log');
-
   return new Promise((resolve, reject) => {
-    let file;
-    if (options.log) {
-      file = fs.openSync(logFile, 'w');
-    }
-
     cleanDestination();
+
+    startLog();
 
     ghorg.repos((err, data, header) => {
       if (err) {
         reject(new Error(`getRepositories: ${err}`));
       } else {
-        console.log('\n\rRepositories:\n\r');
+        console.log(`${os.EOL}Repositories:${os.EOL}`);
         let p = Promise.resolve();
         data.forEach(repository => {
           p = p.then(() => new Promise(resolve => {
@@ -183,8 +201,32 @@ function getRepositories () {
 
                   // Generate log
                   if (options.log) {
-                    let res = childProcess.execFileSync('git', ['log', '-1', '--pretty=format:%cI,%an,%ae,%s,%b']).toString().split(',');
-                    fs.writeSync(file, `Repository: ${repository.name}, Branch: ${branch.name}, Last commit: ${new Date(res[0]).toString()} by -${res[1]}-, Subject: -${res[3]}-, Body: -${res[4]}-\n\r`);
+                    const commitsHours = 12;
+
+                    sendToLog('=====>');
+                    sendToLog(`Repository: ${repository.name} / Branch: ${branch.name}`);
+
+                    sendToLog(`Last commits (in the last ${commitsHours} hours):`);
+
+                    let output = childProcess.execFileSync('git', ['log', '-100', '--pretty=format:%cn,%cI']).toString().split('\n');
+
+                    let timeStamp = new Date(Date.now());
+                    timeStamp.setHours(timeStamp.getHours() - commitsHours);
+
+                    let count = 0;
+                    output.forEach(commitItem => {
+                      data = commitItem.split(',');
+
+                      if (new Date(data[1]) >= timeStamp) {
+                        sendToLog(`${data[0]}@${data[1]}`);
+                        count++;
+                      }
+                    });
+
+                    if (count == 0) {
+                      sendToLog(`No commits.`);
+                    } 
+                    sendToLog('');
                   }
 
                   process.chdir(rootPath);
@@ -195,9 +237,7 @@ function getRepositories () {
           }));
         });
         p.then(() => {
-          if (options.log) {
-            fs.closeSync(file);
-          }
+          endLog();
           resolve(data);
         });
       }
