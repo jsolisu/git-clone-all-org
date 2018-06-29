@@ -163,7 +163,7 @@ function getRepositories () {
                   // Generate log
                   if (options.log) {
                     let res = childProcess.execFileSync('git', ['log', '-1', '--pretty=format:%cI,%an,%ae,%s,%b']).toString().split(',');
-                    fs.writeSync(file, `Repository: ${repository.name}, Branch: ${branch.name}, Last commit: ${new Date(res[0]).toString()} by -${res[1]}-\n\r`);
+                    fs.writeSync(file, `Repository: ${repository.name}, Branch: ${branch.name}, Last commit: ${new Date(res[0]).toString()} by -${res[1]}-, Subject: -${res[3]}-, Body: -${res[4]}-\n\r`);
                   }
 
                   process.chdir(rootPath);
