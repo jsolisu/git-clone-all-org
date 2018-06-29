@@ -106,7 +106,7 @@ function getRepositories () {
   const logFile = path.join(rootPath, 'github_clone_all_org.log');
 
   return new Promise((resolve, reject) => {
-    var file;
+    let file;
     if (options.log) {
       file = fs.openSync(logFile, 'w');
     }
