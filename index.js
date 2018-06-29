@@ -45,13 +45,6 @@ function fixPath (pathToFix) {
 
 let rootPath = fixPath(process.cwd());
 
-function convertUnixDateTime (datetime) {
-  let d = new Date(datetime * 1000);
-  let utc = d.getTime() + (d.getTimezoneOffset() * 60000); // This converts to UTC 00:00
-  let nd = new Date(utc + (3600000 * 6));
-  return nd.toLocaleString();
-}
-
 function checkForGit () {
   return commandExists('git')
     .catch(() => {
