@@ -23,7 +23,8 @@ Options:
   -o, --org   Organization       
   -u, --usr   GitHub username    
   -p, --pwd   GitHub password    
-  -d, --dest  Destination path
+  -d, --dest  Destination path (-d "c:\\temp")
   -c, --clean Clean destination path
+  -l, --log   Generate log
   -h          Show help          
 ```
