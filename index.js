@@ -177,7 +177,6 @@ function getRepositories () {
         reject(new Error(`getRepositories: ${err}`));
       } else {
         console.log(`${os.EOL}Repositories (${data.length}):${os.EOL}`);
-        sendToLog(`Total repositories: ${data.length}.`);
         let p = Promise.resolve();
         data.forEach(repository => {
           p = p.then(() => new Promise(resolve => {
@@ -244,6 +243,8 @@ function getRepositories () {
           }));
         });
         p.then(() => {
+          sendToLog(`Total repositories: ${data.length}.`);
+          sendToLog('');
           endLog();
           resolve(data);
         });
