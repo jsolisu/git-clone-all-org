@@ -4,8 +4,10 @@
  *---------------------------------------------------------------------------------------------- */
 
 const os = require('os');
+const packageData = require('./package.json');
+const prodName = `${packageData.name} (GitHub) version ${packageData.version}`;
 
-console.log(`github-clone-all-org (GitHub) version ${require('./package.json').version}${os.EOL}(c) 2018 JSolisU. MIT License.${os.EOL}`);
+console.log(`${prodName}${os.EOL}(c) 2018 JSolisU. MIT License.${os.EOL}`);
 const options = require('yargs')
   .usage('Usage: $0 [options]')
   .alias('o', 'org')
@@ -104,7 +106,7 @@ function getOrgInfo () {
         console.log(`* Plan filled seats: ${data.plan.filled_seats}`);
         console.log(`* Default repository permission: ${data.default_repository_permission}`);
         console.log(`* Members can create repositories: ${data.members_can_create_repositories}`);
-        console.log();
+        console.log(' ');
         resolve(data);
       }
     });
@@ -145,11 +147,15 @@ function cleanDestination () {
 function startLog () {
   if (options.log) {
     logFile = fs.openSync(path.join(rootPath, 'github_clone_all_org.log'), 'w');
+
+    sendToLog(`${prodName} Log${os.EOL}`);
   }
 }
 
 function sendToLog (s) {
-  fs.writeSync(logFile, `${s}${os.EOL}`);
+  if (options.log) {
+    fs.writeSync(logFile, `${s}${os.EOL}`);
+  }
 }
 
 function endLog () {
@@ -170,7 +176,8 @@ function getRepositories () {
       if (err) {
         reject(new Error(`getRepositories: ${err}`));
       } else {
-        console.log(`${os.EOL}Repositories:${os.EOL}`);
+        console.log(`${os.EOL}Repositories (${data.length}):${os.EOL}`);
+        sendToLog(`Total repositories: ${data.length}.`);
         let p = Promise.resolve();
         data.forEach(repository => {
           p = p.then(() => new Promise(resolve => {
@@ -204,7 +211,7 @@ function getRepositories () {
                     const commitsHours = 12;
 
                     sendToLog('=====>');
-                    sendToLog(`Repository: ${repository.name} / Branch: ${branch.name}`);
+                    sendToLog(`Repository: ${repository.full_name} / Branch: ${branch.name}`);
 
                     sendToLog(`Last commits (in the last ${commitsHours} hours):`);
 
