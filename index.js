@@ -128,6 +128,12 @@ function getOrgMembers () {
 
 function cleanDestination () {
   if (options.dest && options.clean) {
+    try {
+      console.log('Deleting log file...');
+      fs.unlinkSync(path.join(rootPath, 'github_clone_all_org.log'));
+    } catch (error) {
+    }
+
     fs.readdir(rootPath, function (err, files) {
       if (!err) {
         files.map(function (file) {
