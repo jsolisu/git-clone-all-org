@@ -280,6 +280,12 @@ function compressBackup () {
           }
         }
 
+        try {
+          console.log('Deleting compressed backup file...');
+          fs.unlinkSync(destFile);
+        } catch (error) {
+        }
+
         console.log(`Compressing to <${destFile}>...`);
         try {
           childProcess.execFileSync('7z', ['a', '-mx9', '-t7z', destFile, rootPath]);
