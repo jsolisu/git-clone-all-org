@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *---------------------------------------------------------------------------------------------- */
 
+const fs = require('fs');
 const os = require('os');
 const packageData = require('./package.json');
 const prodName = `${packageData.name} (GitHub) version ${packageData.version}`;
@@ -24,6 +25,9 @@ const options = require('yargs')
   .describe('l', 'Generate log')
   .alias('z', 'zip')
   .describe('z', 'Compress backup to <path> + <file>.7z (if file is $ then use default filename.7z)')
+  .config('settings', (configPath) => {
+    return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  })
   .help('h')
   .demandOption(['o', 'u', 'p'])
   .argv;
@@ -36,7 +40,6 @@ const client = github.client({
 const childProcess = require('child_process');
 const rimraf = require('rimraf');
 const path = require('path');
-const fs = require('fs');
 const commandExists = require('command-exists');
 
 const moment = require('moment');
