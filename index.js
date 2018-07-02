@@ -17,13 +17,13 @@ const options = require('yargs')
   .alias('p', 'pwd')
   .describe('p', 'GitHub password')
   .alias('d', 'dest')
-  .describe('d', 'Destination path (-d "c:\\temp")')
+  .describe('d', 'Destination path (-d <path>)')
   .alias('c', 'clean')
   .describe('c', 'Clean destination path')
   .alias('l', 'log')
   .describe('l', 'Generate log')
   .alias('z', 'zip')
-  .describe('z', 'Compress backup to <file>.7z')
+  .describe('z', 'Compress backup to <path> + <file>.7z (if file is $ then use default filename.7z)')
   .help('h')
   .demandOption(['o', 'u', 'p'])
   .argv;
@@ -267,10 +267,25 @@ function compressBackup () {
   return new Promise((resolve, reject) => {
     if (process.platform === 'win32') {
       if (options.zip) {
-        let destFile = path.join(rootPath, `git${moment(new Date).format('YYYYMMDD')}.7z`);
+        let destFile;
+        let defaultFile = `git${moment(new Date()).format('YYYYMMDD')}.7z`;
 
-        console.log(`Compressing to <${destFile}>...`)
-        childProcess.execFileSync('7z', ['a', '-mx9', '-t7z', destFile, rootPath]);
+        if (options.zip === 'true') {
+          destFile = path.join(rootPath, defaultFile);
+        } else {
+          if (path.basename(options.zip) === '$') {
+            destFile = path.join(path.dirname(options.zip), defaultFile);
+          } else {
+            destFile = options.zip;
+          }
+        }
+
+        console.log(`Compressing to <${destFile}>...`);
+        try {
+          childProcess.execFileSync('7z', ['a', '-mx9', '-t7z', destFile, rootPath]);
+        } catch (error) {
+          reject(new Error(`compressBackup: ${error}`));
+        }
       }
       resolve();
     } else {
