@@ -22,6 +22,8 @@ const options = require('yargs')
   .describe('c', 'Clean destination path')
   .alias('l', 'log')
   .describe('l', 'Generate log')
+  .alias('z', 'zip')
+  .describe('z', 'Compress backup to <file>.7z')
   .help('h')
   .demandOption(['o', 'u', 'p'])
   .argv;
@@ -36,6 +38,8 @@ const rimraf = require('rimraf');
 const path = require('path');
 const fs = require('fs');
 const commandExists = require('command-exists');
+
+const moment = require('moment');
 
 const ghorg = client.org(options.org);
 ghorg.extra = {
@@ -259,6 +263,22 @@ function getRepositories () {
   });
 }
 
+function compressBackup () {
+  return new Promise((resolve, reject) => {
+    if (process.platform === 'win32') {
+      if (options.zip) {
+        let destFile = path.join(rootPath, `git${moment(new Date).format('YYYYMMDD')}.7z`);
+
+        console.log(`Compressing to <${destFile}>...`)
+        childProcess.execFileSync('7z', ['a', '-mx9', '-t7z', destFile, rootPath]);
+      }
+      resolve();
+    } else {
+      reject(new Error('compressBackup: Not supported.'));
+    }
+  });
+}
+
 (() => {
   checkForGit()
     .then(() => setRootPath())
@@ -266,6 +286,7 @@ function getRepositories () {
     .then(() => getOrgInfo())
     .then(() => getOrgMembers())
     .then(() => getRepositories())
+    .then(() => compressBackup())
     .then(() => console.log('Done.'))
     .catch(error => console.log(error.message));
 })();
