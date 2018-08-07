@@ -27,7 +27,6 @@
     "@octokit/rest": "^15.9.5",
     "command-exists": "^1.2.7",
     "moment": "^2.22.2",
-    "octonode": "^0.9.3",
     "rimraf": "^2.6.2",
     "yargs": "^11.1.0"
   },

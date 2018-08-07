@@ -33,11 +33,7 @@ const options = require('yargs')
   .argv;
 
 const octokit = require('@octokit/rest')();
-const github = require('octonode');
-const client = github.client({
-  username: options.usr,
-  password: options.pwd
-});
+
 const childProcess = require('child_process');
 const rimraf = require('rimraf');
 const path = require('path');
@@ -98,7 +94,7 @@ function getUserInfo () {
   return new Promise((resolve, reject) => {
     octokit.users.get({}, (error, result) => {
       if (error) {
-        reject(new Error('getUserInfo: ${error}'));
+        reject(new Error(`getUserInfo: ${error}`));
       } else {
         console.log(`Welcome ${result.data.name}${os.EOL}`);
         resolve(result);
@@ -183,18 +179,17 @@ function getRepositories () {
 
     octokit.repos.getForOrg({org: options.org, per_page: 100}, (error, result) => {
       if (error) {
-        reject(new Error(`getRepositories: ${err}`));
+        reject(new Error(`getRepositories: ${error}`));
       } else {
         console.log(`${os.EOL}Repositories (${result.data.length}):${os.EOL}`);
         let p = Promise.resolve();
         result.data.forEach(repository => {
           p = p.then(() => new Promise(resolve => {
-            let ghrepo = client.repo(`${options.org}/${repository.name}`);
-            ghrepo.branches((err, data, header) => {
-              if (err) {
+            octokit.repos.getBranches({owner: options.org, repo: repository.name, per_page: 100}, (error, result) => {
+              if (error) {
                 // TODO
               } else {
-                data.forEach(branch => {
+                result.data.forEach(branch => {
                   console.log(`${repository.name} => ${repository.html_url} (${branch.name})`);
                   let repoURL = `https://${options.usr}:${options.pwd}@github.com/${options.org}/${repository.name}.git`;
                   let destPath = path.join(rootPath, `${options.org}_${repository.name}_${branch.name}`);
@@ -230,7 +225,7 @@ function getRepositories () {
 
                     let count = 0;
                     output.forEach(commitItem => {
-                      data = commitItem.split(',');
+                      let data = commitItem.split(',');
 
                       if (new Date(data[1]) >= timeStamp) {
                         sendToLog(`${data[0]}@${data[1]}`);
@@ -255,7 +250,7 @@ function getRepositories () {
           sendToLog(`Total repositories: ${result.data.length}.`);
           sendToLog('');
           endLog();
-          resolve(result);
+          resolve(result.headers);
         });
       }
     });
