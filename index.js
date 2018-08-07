@@ -45,8 +45,6 @@ const commandExists = require('command-exists');
 
 const moment = require('moment');
 
-const ghorg = client.org(options.org);
-
 let logFile = null;
 
 function fixPath (pathToFix) {
@@ -183,13 +181,13 @@ function getRepositories () {
 
     startLog();
 
-    ghorg.repos((err, data, header) => {
-      if (err) {
+    octokit.repos.getForOrg({org: options.org, per_page: 100}, (error, result) => {
+      if (error) {
         reject(new Error(`getRepositories: ${err}`));
       } else {
-        console.log(`${os.EOL}Repositories (${data.length}):${os.EOL}`);
+        console.log(`${os.EOL}Repositories (${result.data.length}):${os.EOL}`);
         let p = Promise.resolve();
-        data.forEach(repository => {
+        result.data.forEach(repository => {
           p = p.then(() => new Promise(resolve => {
             let ghrepo = client.repo(`${options.org}/${repository.name}`);
             ghrepo.branches((err, data, header) => {
@@ -254,10 +252,10 @@ function getRepositories () {
           }));
         });
         p.then(() => {
-          sendToLog(`Total repositories: ${data.length}.`);
+          sendToLog(`Total repositories: ${result.data.length}.`);
           sendToLog('');
           endLog();
-          resolve(data);
+          resolve(result);
         });
       }
     });
