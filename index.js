@@ -32,6 +32,7 @@ const options = require('yargs')
   .demandOption(['o', 'u', 'p'])
   .argv;
 
+const octokit = require('@octokit/rest')();
 const github = require('octonode');
 const client = github.client({
   username: options.usr,
@@ -84,14 +85,29 @@ function setRootPath () {
   });
 }
 
+function authenticate () {
+  return new Promise((resolve, reject) => {
+    try {
+      octokit.authenticate({
+        type: 'basic',
+        username: options.usr,
+        password: options.pwd
+      });
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
 function getUserInfo () {
   return new Promise((resolve, reject) => {
-    client.get('/user', {}, function (err, status, body, headers) {
-      if (err) {
-        reject(new Error(`getUserInfo: ${err}`));
+    octokit.users.get({}, (error, result) => {
+      if (error) {
+        reject(new Error('getUserInfo: ${error}'));
       } else {
-        console.log(`Welcome ${body.name}${os.EOL}`);
-        resolve(body);
+        console.log(`Welcome ${result.data.name}${os.EOL}`);
+        resolve(result);
       }
     });
   });
@@ -306,6 +322,7 @@ function compressBackup () {
 (() => {
   checkForGit()
     .then(() => setRootPath())
+    .then(() => authenticate())
     .then(() => getUserInfo())
     .then(() => getOrgInfo())
     .then(() => getOrgMembers())
