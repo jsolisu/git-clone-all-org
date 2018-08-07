@@ -46,10 +46,6 @@ const commandExists = require('command-exists');
 const moment = require('moment');
 
 const ghorg = client.org(options.org);
-ghorg.extra = {
-  info: null,
-  members: null
-};
 
 let logFile = null;
 
@@ -115,35 +111,21 @@ function getUserInfo () {
 
 function getOrgInfo () {
   return new Promise((resolve, reject) => {
-    ghorg.info((err, data, header) => {
-      if (err) {
-        reject(new Error(`getOrgInfo: ${err}`));
+    octokit.orgs.get({org: options.org}, (error, result) => {
+      if (error) {
+        reject(new Error(`getOrgInfo: ${error}`));
       } else {
-        ghorg.extra.info = data;
-        console.log(`Info for [${data.login}] organization:`);
-        console.log(`* Description: ${data.description}`);
-        console.log(`* Url: ${data.html_url}`);
-        console.log(`* Total private repositories: ${data.total_private_repos}`);
-        console.log(`* Plan: ${data.plan.name}`);
-        console.log(`* Plan seats: ${data.plan.seats}`);
-        console.log(`* Plan filled seats: ${data.plan.filled_seats}`);
-        console.log(`* Default repository permission: ${data.default_repository_permission}`);
-        console.log(`* Members can create repositories: ${data.members_can_create_repositories}`);
+        console.log(`Info for [${result.data.login}] organization:`);
+        console.log(`* Description: ${result.data.description}`);
+        console.log(`* Url: ${result.data.html_url}`);
+        console.log(`* Total private repositories: ${result.data.total_private_repos}`);
+        console.log(`* Plan: ${result.data.plan.name}`);
+        console.log(`* Plan seats: ${result.data.plan.seats}`);
+        console.log(`* Plan filled seats: ${result.data.plan.filled_seats}`);
+        console.log(`* Default repository permission: ${result.data.default_repository_permission}`);
+        console.log(`* Members can create repositories: ${result.data.members_can_create_repositories}`);
         console.log(' ');
-        resolve(data);
-      }
-    });
-  });
-}
-
-function getOrgMembers () {
-  return new Promise((resolve, reject) => {
-    ghorg.members((err, data) => {
-      if (err) {
-        reject(new Error(`getOrgMembers: ${err}`));
-      } else {
-        ghorg.extra.members = data;
-        resolve(data);
+        resolve(result);
       }
     });
   });
@@ -325,7 +307,6 @@ function compressBackup () {
     .then(() => authenticate())
     .then(() => getUserInfo())
     .then(() => getOrgInfo())
-    .then(() => getOrgMembers())
     .then(() => getRepositories())
     .then(() => compressBackup())
     .then(() => console.log('Done.'))
