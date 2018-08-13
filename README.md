@@ -23,11 +23,13 @@ Options:
   -o, --org   Organization       
   -u, --usr   GitHub username    
   -p, --pwd   GitHub password    
-  -t, --token GitHub token (You can´t use -p parameter)
+  -t, --token GitHub token (-u and -p parameters are useless)
   -d, --dest  Destination path (-d "c:\\temp")
   -c, --clean Clean destination path
   -l, --log   Generate log
   -z, --zip   Compress backup to <path> + <file>.7z (if file is $ then use default filename.7z)
   --settings  Settings file <config.json>
   -h          Show help          
-```
+
+ ```
+ Note: Your GitHub token needs repo scope only.

@@ -17,6 +17,8 @@ const options = require('yargs')
   .describe('u', 'GitHub username')
   .alias('p', 'pwd')
   .describe('p', 'GitHub password')
+  .alias('t', 'token')
+  .describe('t', 'GitHub token (-u and -p parameters are useless)')
   .alias('d', 'dest')
   .describe('d', 'Destination path (-d <path>)')
   .alias('c', 'clean')
@@ -29,7 +31,7 @@ const options = require('yargs')
     return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
   })
   .help('h')
-  .demandOption(['o', 'u', 'p'])
+  .demandOption(['o'])
   .argv;
 
 const octokit = require('@octokit/rest')();
@@ -78,11 +80,22 @@ function setRootPath () {
 function authenticate () {
   return new Promise((resolve, reject) => {
     try {
-      octokit.authenticate({
-        type: 'basic',
-        username: options.usr,
-        password: options.pwd
-      });
+      if (!options.token) {
+        if (!options.usr || !options.pwd) {
+          throw new Error('Basic authentication requires both user and password parameters.');
+        }
+        octokit.authenticate({
+          type: 'basic',
+          username: options.usr,
+          password: options.pwd
+        });
+      } else {
+        octokit.authenticate({
+          type: 'oauth',
+          token: options.token
+        });
+      }
+
       resolve();
     } catch (error) {
       reject(error);
@@ -191,7 +204,16 @@ function getRepositories () {
               } else {
                 result.data.forEach(branch => {
                   console.log(`${repository.name} => ${repository.html_url} (${branch.name})`);
-                  let repoURL = `https://${options.usr}:${options.pwd}@github.com/${options.org}/${repository.name}.git`;
+
+                  let repoURL;
+                  if (!options.token) {
+                    // basic
+                    repoURL = `https://${options.usr}:${options.pwd}@github.com/${options.org}/${repository.name}.git`;
+                  } else {
+                    // oauth
+                    repoURL = `https://${options.token}@github.com/${options.org}/${repository.name}.git`;
+                  }
+
                   let destPath = path.join(rootPath, `${options.org}_${repository.name}_${branch.name}`);
 
                   // cleanup branch
