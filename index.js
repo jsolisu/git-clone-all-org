@@ -144,6 +144,9 @@ function cleanDestination () {
       console.log('Deleting log file...');
       fs.unlinkSync(path.join(rootPath, 'github_clone_all_org.log'));
     } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw new Error(`cleanDestination: ${error}`);
+      }
     }
 
     fs.readdir(rootPath, function (err, files) {
@@ -300,6 +303,9 @@ function compressBackup () {
           console.log('Deleting compressed backup file...');
           fs.unlinkSync(destFile);
         } catch (error) {
+          if (error.code !== 'ENOENT') {
+            reject(new Error(`compressBackup: ${error}`));
+          }
         }
 
         console.log(`Compressing to <${destFile}>...`);
