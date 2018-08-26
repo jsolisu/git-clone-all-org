@@ -105,34 +105,31 @@ function authenticate () {
 
 function getUserInfo () {
   return octokit.users.get({})
-  .then(result => {
-        console.log(`Welcome ${result.data.name}${os.EOL}`);
-  })
-  .catch((error) => {
-reject(new Error(`getUserInfo: ${error}`));
-  });
+    .then(result => {
+      console.log(`Welcome ${result.data.name}${os.EOL}`);
+    })
+    .catch((error) => {
+      throw new Error(`getUserInfo: ${error}`);
+    });
 }
 
 function getOrgInfo () {
-  return new Promise((resolve, reject) => {
-    octokit.orgs.get({org: options.org}, (error, result) => {
-      if (error) {
-        reject(new Error(`getOrgInfo: ${error}`));
-      } else {
-        console.log(`Info for [${result.data.login}] organization:`);
-        console.log(`* Description: ${result.data.description}`);
-        console.log(`* Url: ${result.data.html_url}`);
-        console.log(`* Total private repositories: ${result.data.total_private_repos}`);
-        console.log(`* Plan: ${result.data.plan.name}`);
-        console.log(`* Plan seats: ${result.data.plan.seats}`);
-        console.log(`* Plan filled seats: ${result.data.plan.filled_seats}`);
-        console.log(`* Default repository permission: ${result.data.default_repository_permission}`);
-        console.log(`* Members can create repositories: ${result.data.members_can_create_repositories}`);
-        console.log(' ');
-        resolve(result);
-      }
+  return octokit.orgs.get({org: options.org})
+    .then(result => {
+      console.log(`Info for [${result.data.login}] organization:`);
+      console.log(`* Description: ${result.data.description}`);
+      console.log(`* Url: ${result.data.html_url}`);
+      console.log(`* Total private repositories: ${result.data.total_private_repos}`);
+      console.log(`* Plan: ${result.data.plan.name}`);
+      console.log(`* Plan seats: ${result.data.plan.seats}`);
+      console.log(`* Plan filled seats: ${result.data.plan.filled_seats}`);
+      console.log(`* Default repository permission: ${result.data.default_repository_permission}`);
+      console.log(`* Members can create repositories: ${result.data.members_can_create_repositories}`);
+      console.log(' ');
+    })
+    .catch((error) => {
+      throw new Error(`getOrgInfo: ${error}`);
     });
-  });
 }
 
 function cleanDestination () {
