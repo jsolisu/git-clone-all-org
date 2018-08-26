@@ -79,27 +79,22 @@ function setRootPath () {
 
 function authenticate () {
   return new Promise((resolve, reject) => {
-    try {
-      if (!options.token) {
-        if (!options.usr || !options.pwd) {
-          throw new Error('Basic authentication requires both user and password parameters.');
-        }
-        octokit.authenticate({
-          type: 'basic',
-          username: options.usr,
-          password: options.pwd
-        });
-      } else {
-        octokit.authenticate({
-          type: 'oauth',
-          token: options.token
-        });
+    if (!options.token) {
+      if (!options.usr || !options.pwd) {
+        reject(new Error('Basic authentication requires both user and password parameters.'));
       }
-
-      resolve();
-    } catch (error) {
-      reject(error);
+      octokit.authenticate({
+        type: 'basic',
+        username: options.usr,
+        password: options.pwd
+      });
+    } else {
+      octokit.authenticate({
+        type: 'oauth',
+        token: options.token
+      });
     }
+    resolve();
   });
 }
 
