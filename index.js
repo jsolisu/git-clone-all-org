@@ -104,15 +104,12 @@ function authenticate () {
 }
 
 function getUserInfo () {
-  return new Promise((resolve, reject) => {
-    octokit.users.get({}, (error, result) => {
-      if (error) {
-        reject(new Error(`getUserInfo: ${error}`));
-      } else {
+  return octokit.users.get({})
+  .then(result => {
         console.log(`Welcome ${result.data.name}${os.EOL}`);
-        resolve(result);
-      }
-    });
+  })
+  .catch((error) => {
+reject(new Error(`getUserInfo: ${error}`));
   });
 }
 
