@@ -2,13 +2,22 @@
   "name": "github-clone-all-org",
   "version": "1.0.0",
   "description": "Clone all organization branches from GitHub",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "preferGlobal": true,
   "directories": {
     "bin": "./bin"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -p tsconfig.json",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "keywords": [
     "git"
@@ -25,23 +34,17 @@
   "homepage": "https://github.com/jsolisu/github-clone-all-org#readme",
   "dependencies": {
     "@octokit/rest": "^15.9.5",
+    "@types/yargs": "^11.1.1",
     "command-exists": "^1.2.7",
     "moment": "^2.22.2",
     "rimraf": "^2.6.2",
     "yargs": "^11.1.0"
   },
-  "eslintConfig": {
-    "parserOptions": {
-      "ecmaVersion": 6
-    }
-  },
   "devDependencies": {
-    "eslint": "^5.4.0",
-    "eslint-config-semistandard": "^12.0.1",
-    "eslint-config-standard": "^11.0.0",
-    "eslint-plugin-import": "^2.14.0",
-    "eslint-plugin-node": "^7.0.1",
-    "eslint-plugin-promise": "^4.0.0",
-    "eslint-plugin-standard": "^3.1.0"
+    "@types/node": "^10.9.2",
+    "prettier": "^1.14.2",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.15.0",
+    "typescript": "^3.0.1"
   }
 }
