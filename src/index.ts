@@ -199,7 +199,6 @@ function getRepositories() {
         console.log(`${os.EOL}Repositories (${result.data.length}):${os.EOL}`);
         let p = Promise.resolve();
         result.data.forEach((repository: any) => {
-          
           p = p.then(
             () =>
               // tslint:disable-next-line:no-shadowed-variable
