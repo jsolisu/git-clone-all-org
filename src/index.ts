@@ -61,10 +61,12 @@ function fixPath(pathToFix: string) {
 
 let rootPath = fixPath(process.cwd());
 
-function checkForGit() {
-  return commandExists('git').catch(() => {
-    return Promise.reject(new Error('Git not found.'));
-  });
+function checkForTools() {
+  return commandExists('git')
+    .then(() => commandExists('7z'))
+    .catch(() => {
+      throw new Error(`checkForTools: Please verify that all required software is installed.`);
+    });
 }
 
 function setRootPath() {
@@ -335,7 +337,7 @@ function compressBackup() {
 }
 
 (() => {
-  checkForGit()
+  checkForTools()
     .then(() => setRootPath())
     .then(() => authenticate())
     .then(() => getUserInfo())

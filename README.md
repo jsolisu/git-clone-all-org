@@ -32,4 +32,6 @@ Options:
   -h          Show help          
 
  ```
- Note: Your GitHub token needs repo scope only.
+ Note: 
+ * Your GitHub token needs repo scope only.
+ * **git** and **7z** needs to be installed.
