@@ -34,4 +34,4 @@ Options:
  ```
  Note: 
  * Your GitHub token needs repo scope only.
- * **git** and **7z** needs to be installed.
+ * **git** and **7z** need to be installed.
