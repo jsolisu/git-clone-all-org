@@ -8,13 +8,11 @@ import os = require('os');
 import * as yargs from 'yargs';
 
 import * as packageData from '../package.json';
+import { GitProxy } from './GitProxy';
+import { Log } from './Log';
 
 // tslint:disable-next-line:no-var-requires
-const octokit = require('@octokit/rest')();
-// tslint:disable-next-line:no-var-requires
 const childProcess = require('child_process');
-// tslint:disable-next-line:no-var-requires
-const rimraf = require('rimraf');
 // tslint:disable-next-line:no-var-requires
 const path = require('path');
 // tslint:disable-next-line:no-var-requires
@@ -49,7 +47,8 @@ const options = yargs
   .help('h')
   .demandOption(['o']).argv;
 
-let logFile: number;
+let proxy: any = null;
+let rootPath = fixPath(process.cwd());
 
 function fixPath(pathToFix: string) {
   if (process.platform === 'win32') {
@@ -59,8 +58,6 @@ function fixPath(pathToFix: string) {
   }
 }
 
-let rootPath = fixPath(process.cwd());
-
 function checkForTools() {
   return commandExists('git')
     .then(() => commandExists('7z'))
@@ -69,230 +66,20 @@ function checkForTools() {
     });
 }
 
-function setRootPath() {
+function initialize() {
   return new Promise((resolve, reject) => {
     if (options.dest) {
       if (fs.existsSync(options.dest)) {
         rootPath = fixPath(options.dest);
+        proxy = new GitProxy(options, rootPath, new Log(rootPath, options.log, prodName));
         resolve(rootPath);
       } else {
         reject(new Error(`Path <${options.dest}> not found.`));
       }
     } else {
+      proxy = new GitProxy(options, rootPath, new Log(rootPath, options.log, prodName));
       resolve(rootPath);
     }
-  });
-}
-
-function authenticate() {
-  return new Promise((resolve, reject) => {
-    if (!options.token) {
-      if (!options.usr || !options.pwd) {
-        reject(new Error('Basic authentication requires both user and password parameters.'));
-      }
-      octokit.authenticate({
-        password: options.pwd,
-        type: 'basic',
-        username: options.usr,
-      });
-    } else {
-      octokit.authenticate({
-        token: options.token,
-        type: 'oauth',
-      });
-    }
-    resolve();
-  });
-}
-
-function getUserInfo() {
-  return octokit.users
-    .get({})
-    .then((result: any) => {
-      console.log(`Welcome ${result.data.name}${os.EOL}`);
-    })
-    .catch((error: any) => {
-      throw new Error(`getUserInfo: ${error}`);
-    });
-}
-
-function getOrgInfo() {
-  return octokit.orgs
-    .get({ org: options.org })
-    .then((result: any) => {
-      console.log(`Info for [${result.data.login}] organization:`);
-      console.log(`* Description: ${result.data.description}`);
-      console.log(`* Url: ${result.data.html_url}`);
-      console.log(`* Total private repositories: ${result.data.total_private_repos}`);
-      console.log(`* Plan: ${result.data.plan.name}`);
-      console.log(`* Plan seats: ${result.data.plan.seats}`);
-      console.log(`* Plan filled seats: ${result.data.plan.filled_seats}`);
-      console.log(`* Default repository permission: ${result.data.default_repository_permission}`);
-      console.log(`* Members can create repositories: ${result.data.members_can_create_repositories}`);
-      console.log(' ');
-    })
-    .catch((error: any) => {
-      throw new Error(`getOrgInfo: ${error}`);
-    });
-}
-
-function cleanDestination() {
-  if (options.dest && options.clean) {
-    try {
-      console.log('Deleting log file...');
-      fs.unlinkSync(path.join(rootPath, 'git_clone_all_org.log'));
-    } catch (error) {
-      if (error.code !== 'ENOENT') {
-        throw new Error(`cleanDestination: ${error}`);
-      }
-    }
-
-    fs.readdir(rootPath, (err, files) => {
-      if (!err) {
-        files
-          .map(file => {
-            return path.join(rootPath, file);
-          })
-          .filter(file => {
-            return fs.statSync(file).isDirectory();
-          })
-          .forEach(file => {
-            console.log(`Deleting path <${file}>...`);
-            rimraf.sync(file);
-          });
-      }
-    });
-  }
-}
-
-/* Log File: Begin */
-function startLog() {
-  if (options.log) {
-    logFile = fs.openSync(path.join(rootPath, 'git_clone_all_org.log'), 'w');
-
-    sendToLog(`${prodName} Log${os.EOL}`);
-  }
-}
-
-function sendToLog(s: string) {
-  if (options.log) {
-    fs.writeSync(logFile, `${s}${os.EOL}`);
-  }
-}
-
-function endLog() {
-  if (options.log) {
-    fs.closeSync(logFile);
-  }
-}
-
-/* Log File: End */
-
-function getRepositories() {
-  return new Promise((resolve, reject) => {
-    cleanDestination();
-
-    startLog();
-
-    octokit.repos.getForOrg({ org: options.org, per_page: 100 }, (error: any, result: any) => {
-      if (error) {
-        reject(new Error(`getRepositories: ${error}`));
-      } else {
-        console.log(`${os.EOL}Repositories (${result.data.length}):${os.EOL}`);
-        let p = Promise.resolve();
-        result.data.forEach((repository: any) => {
-          p = p.then(
-            () =>
-              // tslint:disable-next-line:no-shadowed-variable
-              new Promise<void>(resolve => {
-                octokit.repos.getBranches(
-                  { owner: options.org, repo: repository.name, per_page: 100 },
-                  // tslint:disable-next-line:no-shadowed-variable
-                  (error: any, result: any) => {
-                    if (error) {
-                      // TODO
-                    } else {
-                      result.data.forEach((branch: any) => {
-                        console.log(`${repository.name} => ${repository.html_url} (${branch.name})`);
-
-                        let repoURL;
-                        if (!options.token) {
-                          // basic
-                          repoURL = `https://${options.usr}:${options.pwd}@github.com/${options.org}/${
-                            repository.name
-                          }.git`;
-                        } else {
-                          // oauth
-                          repoURL = `https://${options.token}@github.com/${options.org}/${repository.name}.git`;
-                        }
-
-                        const destPath = path.join(rootPath, `${options.org}_${repository.name}_${branch.name}`);
-
-                        // cleanup branch
-                        rimraf.sync(destPath);
-
-                        childProcess.execFileSync('git', ['clone', repoURL, destPath], {
-                          env: process.env,
-                        });
-
-                        // If the branch is master, it is already cloned
-                        process.chdir(destPath);
-                        if (branch.name !== 'master') {
-                          childProcess.execFileSync('git', ['checkout', branch.name], {
-                            env: process.env,
-                          });
-                        }
-
-                        // Generate log
-                        if (options.log) {
-                          const commitsHours = 12;
-
-                          sendToLog('=====>');
-                          sendToLog(`Repository: ${repository.full_name} / Branch: ${branch.name}`);
-
-                          sendToLog(`Last commits (in the last ${commitsHours} hours):`);
-
-                          const output = childProcess
-                            .execFileSync('git', ['log', '-100', '--pretty=format:%cn,%cI'])
-                            .toString()
-                            .split('\n');
-
-                          const timeStamp = new Date(Date.now());
-                          timeStamp.setHours(timeStamp.getHours() - commitsHours);
-
-                          let count = 0;
-                          output.forEach((commitItem: any) => {
-                            const data = commitItem.split(',');
-
-                            if (new Date(data[1]) >= timeStamp) {
-                              sendToLog(`${data[0]}@${data[1]}`);
-                              count++;
-                            }
-                          });
-
-                          if (count === 0) {
-                            sendToLog(`No commits.`);
-                          }
-                          sendToLog('');
-                        }
-
-                        process.chdir(rootPath);
-                      });
-                    }
-                    resolve();
-                  },
-                );
-              }),
-          );
-        });
-        p.then(() => {
-          sendToLog(`Total repositories: ${result.data.length}.`);
-          sendToLog('');
-          endLog();
-          resolve(result.headers);
-        });
-      }
-    });
   });
 }
 
@@ -338,11 +125,11 @@ function compressBackup() {
 
 (() => {
   checkForTools()
-    .then(() => setRootPath())
-    .then(() => authenticate())
-    .then(() => getUserInfo())
-    .then(() => getOrgInfo())
-    .then(() => getRepositories())
+    .then(() => initialize())
+    .then(() => proxy.authenticate())
+    .then(() => proxy.getUserInfo())
+    .then(() => proxy.getOrgInfo())
+    .then(() => proxy.getRepositories())
     .then(() => compressBackup())
     .then(() => console.log('Done.'))
     .catch((error: any) => console.log(error.message));
