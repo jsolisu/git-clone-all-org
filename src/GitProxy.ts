@@ -15,21 +15,27 @@ const path = require('path');
 // tslint:disable-next-line:no-var-requires
 const octokit = require('@octokit/rest')();
 
+import * as azdev from 'azure-devops-node-api';
+import * as ga from 'azure-devops-node-api/GitApi';
+import { toASCII } from 'punycode';
+
 export class GitProxy {
   private log: any;
   private options: any;
   private rootPath: string;
+  private azgit: any; // azure devops interface
   constructor(options: any, rootPath: string, log: any) {
     this.options = options;
     this.rootPath = rootPath;
     this.log = log;
+    this.azgit = {} as any;
   }
   public authenticate() {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       if (this.options.serverType === 'github') {
         if (!this.options.token) {
           if (!this.options.usr || !this.options.pwd) {
-            reject(new Error('Basic authentication requires both user and password parameters.'));
+            reject(new Error('authenticate: Basic authentication requires both user and password parameters.'));
           }
           octokit.authenticate({
             password: this.options.pwd,
@@ -43,8 +49,26 @@ export class GitProxy {
           });
         }
         resolve();
+      } else if (this.options.serverType === 'azure-devops') {
+        if (!this.options.token) {
+          reject(new Error('authenticate: Basic authentication is not supported with azure-devops.'));
+        } else {
+          const authHandler = azdev.getPersonalAccessTokenHandler(this.options.token);
+          const connection = new azdev.WebApi(`https://dev.azure.com/${this.options.org}`, authHandler);
+
+          const connectionData = await connection.connect();
+
+          // anonymous user ?
+          if (connectionData.authorizedUser.id === 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') {
+            reject(new Error('authenticate: Cannot connect to azure-devops.'));
+          } else {
+            this.azgit.api = await connection.getGitApi();
+            this.azgit.connectionData = connectionData;
+            resolve();
+          }
+        }
       } else {
-        reject(new Error('Server type is not supported.'));
+        reject(new Error('authenticate: Server type is not supported.'));
       }
     });
   }
@@ -58,8 +82,12 @@ export class GitProxy {
         .catch((error: any) => {
           throw new Error(`getUserInfo: ${error}`);
         });
-    } else {
-      return Promise.reject(new Error('Server type is not supported.'));
+    }
+    if (this.options.serverType === 'azure-devops') {
+      return new Promise((resolve, reject) => {
+        console.log(`Welcome ${this.azgit.connectionData.authenticatedUser.customDisplayName}${os.EOL}`);
+        resolve();
+      });
     }
   }
   public getOrgInfo() {
@@ -81,8 +109,6 @@ export class GitProxy {
         .catch((error: any) => {
           throw new Error(`getOrgInfo: ${error}`);
         });
-    } else {
-      return Promise.reject(new Error('Server type is not supported.'));
     }
   }
   public getRepositories() {

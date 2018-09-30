@@ -1,0 +1,9 @@
+{
+    "serverType": "github",
+    "org": "tecun",
+    "token": "8221214683533c82f4089301261092adec876b94",
+    "dest": "C:\\Temp",
+    "clean": true,
+    "log": true,
+    "zip": "C:\\Temp\\$"
+}
