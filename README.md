@@ -1,29 +1,29 @@
-# github-clone-all-org
-Clone all organization branches from GitHub.
+# git-clone-all-org
+Clone all organization branches from a Git Server.
 
 ### Installation
 
 Windows
 ```
-npm install -g github-clone-all-org
+npm install -g git-clone-all-org
 ```
 
 Linux
 ```
-sudo npm install -g github-clone-all-org
+sudo npm install -g git-clone-all-org
 ```
 
 ### Usage
 
 ```
-github-clone-all-org [options]
+git-clone-all-org [options]
 
 Options:
   --version   Show version number
   -o, --org   Organization       
-  -u, --usr   GitHub username    
-  -p, --pwd   GitHub password    
-  -t, --token GitHub token (-u and -p parameters are useless)
+  -u, --usr   Git username    
+  -p, --pwd   Git password    
+  -t, --token Git token (-u and -p parameters are useless)
   -d, --dest  Destination path (-d "c:\\temp")
   -c, --clean Clean destination path
   -l, --log   Generate log

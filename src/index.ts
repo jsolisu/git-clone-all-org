@@ -22,7 +22,7 @@ const commandExists = require('command-exists');
 // tslint:disable-next-line:no-var-requires
 const moment = require('moment');
 
-const prodName = `${(packageData as any).name} (GitHub) version ${(packageData as any).version}`;
+const prodName = `${(packageData as any).name} version ${(packageData as any).version}`;
 console.log(`${prodName}${os.EOL}(c) 2018 JSolisU. MIT License.${os.EOL}`);
 
 const options = yargs
@@ -30,11 +30,11 @@ const options = yargs
   .alias('o', 'org')
   .describe('o', 'Organization')
   .alias('u', 'usr')
-  .describe('u', 'GitHub username')
+  .describe('u', 'Git username')
   .alias('p', 'pwd')
-  .describe('p', 'GitHub password')
+  .describe('p', 'Git password')
   .alias('t', 'token')
-  .describe('t', 'GitHub token (-u and -p parameters are useless)')
+  .describe('t', 'Git token (-u and -p parameters are useless)')
   .alias('d', 'dest')
   .describe('d', 'Destination path (-d <path>)')
   .alias('c', 'clean')
@@ -140,7 +140,7 @@ function cleanDestination() {
   if (options.dest && options.clean) {
     try {
       console.log('Deleting log file...');
-      fs.unlinkSync(path.join(rootPath, 'github_clone_all_org.log'));
+      fs.unlinkSync(path.join(rootPath, 'git_clone_all_org.log'));
     } catch (error) {
       if (error.code !== 'ENOENT') {
         throw new Error(`cleanDestination: ${error}`);
@@ -168,7 +168,7 @@ function cleanDestination() {
 /* Log File: Begin */
 function startLog() {
   if (options.log) {
-    logFile = fs.openSync(path.join(rootPath, 'github_clone_all_org.log'), 'w');
+    logFile = fs.openSync(path.join(rootPath, 'git_clone_all_org.log'), 'w');
 
     sendToLog(`${prodName} Log${os.EOL}`);
   }
