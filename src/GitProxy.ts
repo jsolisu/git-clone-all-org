@@ -16,14 +16,23 @@ const path = require('path');
 const octokit = require('@octokit/rest')();
 
 import * as azdev from 'azure-devops-node-api';
+import * as ca from 'azure-devops-node-api/CoreApi';
 import * as ga from 'azure-devops-node-api/GitApi';
-import { toASCII } from 'punycode';
+import { TeamProjectReference } from 'azure-devops-node-api/interfaces/CoreInterfaces';
+import { GitBranchStats, GitRepository } from 'azure-devops-node-api/interfaces/GitInterfaces';
+import { ConnectionData } from 'azure-devops-node-api/interfaces/LocationsInterfaces';
+
+interface IAZGit {
+  GitApi: ga.IGitApi;
+  CoreApi: ca.ICoreApi;
+  connectionData: ConnectionData;
+}
 
 export class GitProxy {
   private log: any;
   private options: any;
   private rootPath: string;
-  private azgit: any; // azure devops interface
+  private azgit: IAZGit; // azure devops interface
   constructor(options: any, rootPath: string, log: any) {
     this.options = options;
     this.rootPath = rootPath;
@@ -62,7 +71,8 @@ export class GitProxy {
           if (connectionData.authorizedUser.id === 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') {
             reject(new Error('authenticate: Cannot connect to azure-devops.'));
           } else {
-            this.azgit.api = await connection.getGitApi();
+            this.azgit.GitApi = await connection.getGitApi();
+            this.azgit.CoreApi = await connection.getCoreApi();
             this.azgit.connectionData = connectionData;
             resolve();
           }
@@ -112,115 +122,155 @@ export class GitProxy {
     }
   }
   public getRepositories() {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       this.cleanDestination();
 
       this.log.startLog();
 
-      octokit.repos.getForOrg({ org: this.options.org, per_page: 100 }, (error: any, result: any) => {
-        if (error) {
-          reject(new Error(`getRepositories: ${error}`));
-        } else {
-          console.log(`${os.EOL}Repositories (${result.data.length}):${os.EOL}`);
-          let p = Promise.resolve();
-          result.data.forEach((repository: any) => {
-            p = p.then(
-              () =>
-                // tslint:disable-next-line:no-shadowed-variable
-                new Promise<void>(resolve => {
-                  octokit.repos.getBranches(
-                    { owner: this.options.org, repo: repository.name, per_page: 100 },
-                    // tslint:disable-next-line:no-shadowed-variable
-                    (error: any, result: any) => {
-                      if (error) {
-                        // TODO
-                      } else {
-                        result.data.forEach((branch: any) => {
-                          console.log(`${repository.name} => ${repository.html_url} (${branch.name})`);
+      if (this.options.serverType === 'github') {
+        octokit.repos.getForOrg({ org: this.options.org, per_page: 100 }, (error: any, result: any) => {
+          if (error) {
+            reject(new Error(`getRepositories: ${error}`));
+          } else {
+            console.log(`${os.EOL}Repositories (${result.data.length}):${os.EOL}`);
+            let p = Promise.resolve();
+            result.data.forEach((repository: any) => {
+              p = p.then(
+                () =>
+                  // tslint:disable-next-line:no-shadowed-variable
+                  new Promise<void>(resolve => {
+                    octokit.repos.getBranches(
+                      { owner: this.options.org, repo: repository.name, per_page: 100 },
+                      // tslint:disable-next-line:no-shadowed-variable
+                      (error: any, result: any) => {
+                        if (error) {
+                          // TODO
+                        } else {
+                          result.data.forEach((branch: any) => {
+                            console.log(`${repository.name} => ${repository.html_url} (${branch.name})`);
 
-                          let repoURL;
-                          if (!this.options.token) {
-                            // basic
-                            repoURL = `https://${this.options.usr}:${this.options.pwd}@github.com/${this.options.org}/${
-                              repository.name
-                            }.git`;
-                          } else {
-                            // oauth
-                            repoURL = `https://${this.options.token}@github.com/${this.options.org}/${
-                              repository.name
-                            }.git`;
-                          }
+                            let repoURL;
+                            if (!this.options.token) {
+                              // basic
+                              repoURL = `https://${this.options.usr}:${this.options.pwd}@github.com/${
+                                this.options.org
+                              }/${repository.name}.git`;
+                            } else {
+                              // oauth
+                              repoURL = `https://${this.options.token}@github.com/${this.options.org}/${
+                                repository.name
+                              }.git`;
+                            }
 
-                          const destPath = path.join(
-                            this.rootPath,
-                            `${this.options.org}_${repository.name}_${branch.name}`,
-                          );
+                            const destPath = path.join(
+                              this.rootPath,
+                              `${this.options.org}_${repository.name}_${branch.name}`,
+                            );
 
-                          // cleanup branch
-                          rimraf.sync(destPath);
+                            // cleanup branch
+                            rimraf.sync(destPath);
 
-                          childProcess.execFileSync('git', ['clone', repoURL, destPath], {
-                            env: process.env,
-                          });
-
-                          // If the branch is master, it is already cloned
-                          process.chdir(destPath);
-                          if (branch.name !== 'master') {
-                            childProcess.execFileSync('git', ['checkout', branch.name], {
+                            childProcess.execFileSync('git', ['clone', repoURL, destPath], {
                               env: process.env,
                             });
-                          }
 
-                          // Generate log
-                          if (this.options.log) {
-                            const commitsHours = 12;
-
-                            this.log.sendToLog('=====>');
-                            this.log.sendToLog(`Repository: ${repository.full_name} / Branch: ${branch.name}`);
-
-                            this.log.sendToLog(`Last commits (in the last ${commitsHours} hours):`);
-
-                            const output = childProcess
-                              .execFileSync('git', ['log', '-100', '--pretty=format:%cn,%cI'])
-                              .toString()
-                              .split('\n');
-
-                            const timeStamp = new Date(Date.now());
-                            timeStamp.setHours(timeStamp.getHours() - commitsHours);
-
-                            let count = 0;
-                            output.forEach((commitItem: any) => {
-                              const data = commitItem.split(',');
-
-                              if (new Date(data[1]) >= timeStamp) {
-                                this.log.sendToLog(`${data[0]}@${data[1]}`);
-                                count++;
-                              }
-                            });
-
-                            if (count === 0) {
-                              this.log.sendToLog(`No commits.`);
+                            // If the branch is master, it is already cloned
+                            process.chdir(destPath);
+                            if (branch.name !== 'master') {
+                              childProcess.execFileSync('git', ['checkout', branch.name], {
+                                env: process.env,
+                              });
                             }
-                            this.log.sendToLog('');
-                          }
 
-                          process.chdir(this.rootPath);
+                            // Generate log
+                            if (this.options.log) {
+                              const commitsHours = 12;
+
+                              this.log.sendToLog('=====>');
+                              this.log.sendToLog(`Repository: ${repository.full_name} / Branch: ${branch.name}`);
+
+                              this.log.sendToLog(`Last commits (in the last ${commitsHours} hours):`);
+
+                              const output = childProcess
+                                .execFileSync('git', ['log', '-100', '--pretty=format:%cn,%cI'])
+                                .toString()
+                                .split('\n');
+
+                              const timeStamp = new Date(Date.now());
+                              timeStamp.setHours(timeStamp.getHours() - commitsHours);
+
+                              let count = 0;
+                              output.forEach((commitItem: any) => {
+                                const data = commitItem.split(',');
+
+                                if (new Date(data[1]) >= timeStamp) {
+                                  this.log.sendToLog(`${data[0]}@${data[1]}`);
+                                  count++;
+                                }
+                              });
+
+                              if (count === 0) {
+                                this.log.sendToLog(`No commits.`);
+                              }
+                              this.log.sendToLog('');
+                            }
+
+                            process.chdir(this.rootPath);
+                          });
+                        }
+                        resolve(); // p level
+                      },
+                    );
+                  }),
+              );
+            });
+            p.then(() => {
+              this._endLog(result.data.length);
+
+              resolve(result.headers); // main level
+            });
+          }
+        });
+      } else if (this.options.serverType === 'azure-devops') {
+        const projects = await this.azgit.CoreApi.getProjects();
+
+        let totalRepositories = 0;
+        console.log(`${os.EOL}Projects (${projects.length}):${os.EOL}`);
+        let p = Promise.resolve();
+        projects.forEach(async (project: TeamProjectReference) => {
+          p = p.then(
+            () =>
+              // tslint:disable-next-line:no-shadowed-variable
+              new Promise<void>(async resolve => {
+                const repositories = await this.azgit.GitApi.getRepositories(project.name);
+
+                totalRepositories += repositories.length;
+                let q = Promise.resolve();
+                repositories.forEach((repository: GitRepository) => {
+                  q = q.then(
+                    () =>
+                      // tslint:disable-next-line:no-shadowed-variable
+                      new Promise<void>(async resolve => {
+                        const branches = await this.azgit.GitApi.getBranches(repository.name, project.name);
+
+                        branches.forEach((branch: GitBranchStats) => {
+                          console.log(branch.name);
                         });
-                      }
-                      resolve();
-                    },
+                        resolve(); // q level
+                      }),
                   );
-                }),
-            );
-          });
-          p.then(() => {
-            this.log.sendToLog(`Total repositories: ${result.data.length}.`);
-            this.log.sendToLog('');
-            this.log.endLog();
-            resolve(result.headers);
-          });
-        }
-      });
+                });
+                q.then(() => {
+                  resolve(); // p level
+                });
+              }),
+          );
+        });
+        p.then(() => {
+          this._endLog(totalRepositories);
+          resolve(); // main level
+        });
+      }
     });
   }
   private cleanDestination() {
@@ -251,11 +301,9 @@ export class GitProxy {
       });
     }
   }
-  private fixPath(pathToFix: string) {
-    if (process.platform === 'win32') {
-      return pathToFix.replace(/\\/g, '\\\\');
-    } else {
-      return pathToFix;
-    }
+  private _endLog(totalRepositories: number) {
+    this.log.sendToLog(`Total repositories: ${totalRepositories}.`);
+    this.log.sendToLog('');
+    this.log.endLog();
   }
 }
