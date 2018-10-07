@@ -148,72 +148,8 @@ export class GitProxy {
                         } else {
                           result.data.forEach((branch: any) => {
                             console.log(`${repository.name} => ${repository.html_url} (${branch.name})`);
-
-                            let repoURL;
-                            if (!this.options.token) {
-                              // basic
-                              repoURL = `https://${this.options.usr}:${this.options.pwd}@github.com/${
-                                this.options.org
-                              }/${repository.name}.git`;
-                            } else {
-                              // oauth
-                              repoURL = `https://${this.options.token}@github.com/${this.options.org}/${
-                                repository.name
-                              }.git`;
-                            }
-
-                            const destPath = path.join(
-                              this.rootPath,
-                              `${this.options.org}_${repository.name}_${branch.name}`,
-                            );
-
-                            // cleanup branch
-                            rimraf.sync(destPath);
-
-                            childProcess.execFileSync('git', ['clone', repoURL, destPath], {
-                              env: process.env,
-                            });
-
-                            // If the branch is master, it is already cloned
-                            process.chdir(destPath);
-                            if (branch.name !== 'master') {
-                              childProcess.execFileSync('git', ['checkout', branch.name], {
-                                env: process.env,
-                              });
-                            }
-
-                            // Generate log
-                            if (this.options.log) {
-                              const commitsHours = 12;
-
-                              this.log.sendToLog('=====>');
-                              this.log.sendToLog(`Repository: ${repository.full_name} / Branch: ${branch.name}`);
-
-                              this.log.sendToLog(`Last commits (in the last ${commitsHours} hours):`);
-
-                              const output = childProcess
-                                .execFileSync('git', ['log', '-100', '--pretty=format:%cn,%cI'])
-                                .toString()
-                                .split('\n');
-
-                              const timeStamp = new Date(Date.now());
-                              timeStamp.setHours(timeStamp.getHours() - commitsHours);
-
-                              let count = 0;
-                              output.forEach((commitItem: any) => {
-                                const data = commitItem.split(',');
-
-                                if (new Date(data[1]) >= timeStamp) {
-                                  this.log.sendToLog(`${data[0]}@${data[1]}`);
-                                  count++;
-                                }
-                              });
-
-                              if (count === 0) {
-                                this.log.sendToLog(`No commits.`);
-                              }
-                              this.log.sendToLog('');
-                            }
+                            this._cloneRepository(repository.name, branch.name);
+                            this._generateStatistics(repository.name, branch.name);
 
                             process.chdir(this.rootPath);
                           });
@@ -254,7 +190,11 @@ export class GitProxy {
                         const branches = await this.azgit.GitApi.getBranches(repository.name, project.name);
 
                         branches.forEach((branch: GitBranchStats) => {
-                          console.log(branch.name);
+                          console.log(`${repository.name} => ${repository.remoteUrl} (${branch.name})`);
+                          this._cloneRepository(repository.name, branch.name, project.name);
+                          this._generateStatistics(repository.name, branch.name, project.name);
+
+                          process.chdir(this.rootPath);
                         });
                         resolve(); // q level
                       }),
@@ -305,5 +245,73 @@ export class GitProxy {
     this.log.sendToLog(`Total repositories: ${totalRepositories}.`);
     this.log.sendToLog('');
     this.log.endLog();
+  }
+  private _getRepoURL(repository: string, project?: string) {
+    if (this.options.serverType === 'github') {
+      if (!this.options.token) {
+        // basic
+        return `https://${this.options.usr}:${this.options.pwd}@github.com/${this.options.org}/${repository}.git`;
+      } else {
+        // oauth
+        return `https://${this.options.token}@github.com/${this.options.org}/${repository}.git`;
+      }
+    }
+    if (this.options.serverType === 'azure-devops') {
+      if (this.options.token) {
+        // oauth
+        return `https://${this.options.token}@${this.options.org}.visualstudio.com/${project}/_git/${repository}`;
+      }
+    }
+  }
+  private _cloneRepository(repository: string, branch: string, project?: string) {
+    const destPath = path.join(this.rootPath, `${this.options.org}_${repository}_${branch}`);
+
+    // cleanup branch
+    rimraf.sync(destPath);
+
+    childProcess.execFileSync('git', ['clone', this._getRepoURL(repository, project), destPath], {
+      env: process.env,
+    });
+
+    // If the branch is master, it is already cloned
+    process.chdir(destPath);
+    if (branch !== 'master') {
+      childProcess.execFileSync('git', ['checkout', branch], {
+        env: process.env,
+      });
+    }
+  }
+  private _generateStatistics(repository: string, branch: string, project?: string) {
+    if (this.options.log) {
+      const commitsHours = 12;
+
+      this.log.sendToLog('=====>');
+      this.log.sendToLog(`Repository: ${repository} / Branch: ${branch}`);
+
+      this.log.sendToLog(`Last commits (in the last ${commitsHours} hours):`);
+
+      const output = childProcess
+        .execFileSync('git', ['log', '-100', '--pretty=format:%cn,%cI'])
+        .toString()
+        .split('\n');
+
+      const timeStamp = new Date(Date.now());
+      timeStamp.setHours(timeStamp.getHours() - commitsHours);
+
+      let count = 0;
+      output.forEach((commitItem: any) => {
+        const data = commitItem.split(',');
+
+        if (new Date(data[1]) >= timeStamp) {
+          this.log.sendToLog(`${data[0]}@${data[1]}`);
+          count++;
+        }
+      });
+
+      if (count === 0) {
+        this.log.sendToLog(`No commits.`);
+      }
+      this.log.sendToLog('');
+    }
   }
 }
