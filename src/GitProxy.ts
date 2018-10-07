@@ -235,7 +235,11 @@ export class GitProxy {
             })
             .forEach(file => {
               console.log(`Deleting path <${file}>...`);
-              rimraf.sync(file);
+              try {
+                rimraf.sync(file);
+              } catch (error) {
+                throw new Error(`cleanDestination: ${error}.`);
+              }
             });
         }
       });
@@ -264,7 +268,14 @@ export class GitProxy {
     }
   }
   private _cloneRepository(repository: string, branch: string, project?: string) {
-    const destPath = path.join(this.rootPath, `${this.options.org}_${repository}_${branch}`);
+    let destPath: string;
+
+    // set path hierarchy
+    if (this.options.serverType === 'azure-devops') {
+      destPath = path.join(this.rootPath, this.options.org, project, repository, branch);
+    } else {
+      destPath = path.join(this.rootPath, this.options.org, repository, branch);
+    }
 
     // cleanup branch
     rimraf.sync(destPath);
@@ -274,8 +285,8 @@ export class GitProxy {
     });
 
     // If the branch is master, it is already cloned
-    process.chdir(destPath);
     if (branch !== 'master') {
+      process.chdir(destPath);
       childProcess.execFileSync('git', ['checkout', branch], {
         env: process.env,
       });
