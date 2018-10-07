@@ -286,7 +286,12 @@ export class GitProxy {
       const commitsHours = 12;
 
       this.log.sendToLog('=====>');
-      this.log.sendToLog(`Repository: ${repository} / Branch: ${branch}`);
+
+      if (this.options.serverType === 'azure-devops') {
+        this.log.sendToLog(`Project: ${project} / Repository: ${repository} / Branch: ${branch}`);
+      } else {
+        this.log.sendToLog(`Repository: ${repository} / Branch: ${branch}`);
+      }
 
       this.log.sendToLog(`Last commits (in the last ${commitsHours} hours):`);
 
