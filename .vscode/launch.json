@@ -13,7 +13,7 @@
             "args": ["--settings",
                 "config.json",
             ],
-            "preLaunchTask": "build"
+            "preLaunchTask": "build git-clone-all-org"
         }
     ]
 }
