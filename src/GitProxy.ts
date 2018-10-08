@@ -144,14 +144,10 @@ export class GitProxy {
                       // tslint:disable-next-line:no-shadowed-variable
                       (error: any, result: any) => {
                         if (error) {
-                          // TODO
+                          reject(new Error(`getRepositories: ${error}`));
                         } else {
                           result.data.forEach((branch: any) => {
-                            console.log(`${repository.name} => ${repository.html_url} (${branch.name})`);
-                            this._cloneRepository(repository.name, branch.name);
-                            this._generateStatistics(repository.name, branch.name);
-
-                            process.chdir(this.rootPath);
+                            this._backupBranch(repository.html_url, repository.name, branch.name);
                           });
                         }
                         resolve(); // p level
@@ -179,7 +175,7 @@ export class GitProxy {
               // tslint:disable-next-line:no-shadowed-variable
               new Promise<void>(async resolve => {
                 const repositories = await this.azgit.GitApi.getRepositories(project.name);
-
+                console.log(`${os.EOL}[${project.name}] Repositories (${repositories.length}):${os.EOL}`);
                 totalRepositories += repositories.length;
                 let q = Promise.resolve();
                 repositories.forEach((repository: GitRepository) => {
@@ -190,11 +186,7 @@ export class GitProxy {
                         const branches = await this.azgit.GitApi.getBranches(repository.name, project.name);
 
                         branches.forEach((branch: GitBranchStats) => {
-                          console.log(`${repository.name} => ${repository.remoteUrl} (${branch.name})`);
-                          this._cloneRepository(repository.name, branch.name, project.name);
-                          this._generateStatistics(repository.name, branch.name, project.name);
-
-                          process.chdir(this.rootPath);
+                          this._backupBranch(repository.remoteUrl, repository.name, branch.name, project.name);
                         });
                         resolve(); // q level
                       }),
@@ -283,10 +275,11 @@ export class GitProxy {
     childProcess.execFileSync('git', ['clone', this._getRepoURL(repository, project), destPath], {
       env: process.env,
     });
+    process.chdir(destPath);
 
     // If the branch is master, it is already cloned
     if (branch !== 'master') {
-      process.chdir(destPath);
+      
       childProcess.execFileSync('git', ['checkout', branch], {
         env: process.env,
       });
@@ -329,5 +322,17 @@ export class GitProxy {
       }
       this.log.sendToLog('');
     }
+  }
+  private _backupBranch(url: string, repository: string, branch: string, project?: string) {
+    if (this.options.serverType === 'azure-devops') {
+      console.log(`${project}/${repository} => ${url} (${branch})`);
+    } else {
+      console.log(`${repository} => ${url} (${branch})`);
+    }
+
+    this._cloneRepository(repository, branch, project);
+    this._generateStatistics(repository, branch, project);
+
+    process.chdir(this.rootPath);
   }
 }
