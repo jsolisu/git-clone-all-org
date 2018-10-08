@@ -230,7 +230,9 @@ export class GitProxy {
               try {
                 rimraf.sync(file);
               } catch (error) {
-                throw new Error(`cleanDestination: ${error}.`);
+                if ((error.code === 'EPERM') && (process.platform === 'win32')) {
+                  throw new Error(`cleanDestination: Please validate that the antivirus does not prevent to delete the path <${file}>.`)
+                } else { throw new Error(`cleanDestination: ${error}.`); }
               }
             });
         }
