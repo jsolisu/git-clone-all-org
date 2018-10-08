@@ -2,4 +2,4 @@
 !/bin/
 !/src/
 !.vscode/
-config.json
+config*.json
