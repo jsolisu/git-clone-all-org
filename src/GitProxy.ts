@@ -128,7 +128,7 @@ export class GitProxy {
       this.log.startLog();
 
       if (this.options.serverType === 'github') {
-        octokit.repos.getForOrg({ org: this.options.org, per_page: 100 }, (error: any, result: any) => {
+        octokit.repos.listForOrg({ org: this.options.org, per_page: 100 }, (error: any, result: any) => {
           if (error) {
             reject(new Error(`getRepositories: ${error}`));
           } else {
@@ -139,7 +139,7 @@ export class GitProxy {
                 () =>
                   // tslint:disable-next-line:no-shadowed-variable
                   new Promise<void>(resolve => {
-                    octokit.repos.getBranches(
+                    octokit.repos.listBranches(
                       { owner: this.options.org, repo: repository.name, per_page: 100 },
                       // tslint:disable-next-line:no-shadowed-variable
                       (error: any, result: any) => {
