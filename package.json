@@ -28,10 +28,7 @@
     "type": "git",
     "url": "https://jsolisu.visualstudio.com/git-clone-all-org/_git/git-clone-all-org"
   },
-  "bugs": {
-    "url": ""
-  },
-  "homepage": "",
+  "homepage": "https://jsolisu.visualstudio.com/git-clone-all-org/_git/git-clone-all-org",
   "dependencies": {
     "@octokit/rest": "^15.18.1",
     "@types/yargs": "^11.1.1",
