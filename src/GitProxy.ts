@@ -234,13 +234,11 @@ export class GitProxy {
                   throw new Error(
                     `cleanDestination: Please validate that the antivirus is not preventing to delete the path <${file}>.`,
                   );
-                } else
-                if (error.code === 'ENOTEMPTY' && process.platform === 'win32') {
+                } else if (error.code === 'ENOTEMPTY' && process.platform === 'win32') {
                   throw new Error(
                     `cleanDestination: Please validate that TortoiseGit is not preventing to delete the path <${file}>.`,
                   );
-                } else
-                {
+                } else {
                   throw new Error(`cleanDestination: ${error}.`);
                 }
               }
