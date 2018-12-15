@@ -41,7 +41,7 @@ export class GitProxy {
   }
   public authenticate() {
     return new Promise(async (resolve, reject) => {
-      if (this.options.serverType === 'github') {
+      if (this.options.stype === 'github') {
         if (!this.options.token) {
           if (!this.options.usr || !this.options.pwd) {
             reject(new Error('authenticate: Basic authentication requires both user and password parameters.'));
@@ -58,7 +58,7 @@ export class GitProxy {
           });
         }
         resolve();
-      } else if (this.options.serverType === 'azure-devops') {
+      } else if (this.options.stype === 'azure-devops') {
         if (!this.options.token) {
           reject(new Error('authenticate: Basic authentication is not supported with azure-devops.'));
         } else {
@@ -83,7 +83,7 @@ export class GitProxy {
     });
   }
   public getUserInfo() {
-    if (this.options.serverType === 'github') {
+    if (this.options.stype === 'github') {
       return octokit.users
         .get({})
         .then((result: any) => {
@@ -93,7 +93,7 @@ export class GitProxy {
           throw new Error(`getUserInfo: ${error}`);
         });
     }
-    if (this.options.serverType === 'azure-devops') {
+    if (this.options.stype === 'azure-devops') {
       return new Promise((resolve, reject) => {
         console.log(`Welcome ${this.azgit.connectionData.authenticatedUser.customDisplayName}${os.EOL}`);
         resolve();
@@ -101,7 +101,7 @@ export class GitProxy {
     }
   }
   public getOrgInfo() {
-    if (this.options.serverType === 'github') {
+    if (this.options.stype === 'github') {
       return octokit.orgs
         .get({ org: this.options.org })
         .then((result: any) => {
@@ -127,7 +127,7 @@ export class GitProxy {
 
       this.log.startLog();
 
-      if (this.options.serverType === 'github') {
+      if (this.options.stype === 'github') {
         octokit.repos.listForOrg({ org: this.options.org, per_page: 100 }, (error: any, result: any) => {
           if (error) {
             reject(new Error(`getRepositories: ${error}`));
@@ -163,7 +163,7 @@ export class GitProxy {
             });
           }
         });
-      } else if (this.options.serverType === 'azure-devops') {
+      } else if (this.options.stype === 'azure-devops') {
         const projects = await this.azgit.CoreApi.getProjects();
 
         let totalRepositories = 0;
@@ -249,7 +249,7 @@ export class GitProxy {
     this.log.endLog();
   }
   private _getRepoURL(repository: string, project?: string) {
-    if (this.options.serverType === 'github') {
+    if (this.options.stype === 'github') {
       if (!this.options.token) {
         // basic
         return `https://${this.options.usr}:${this.options.pwd}@github.com/${this.options.org}/${repository}.git`;
@@ -258,7 +258,7 @@ export class GitProxy {
         return `https://${this.options.token}@github.com/${this.options.org}/${repository}.git`;
       }
     }
-    if (this.options.serverType === 'azure-devops') {
+    if (this.options.stype === 'azure-devops') {
       if (this.options.token) {
         // oauth
         return `https://${this.options.token}@${this.options.org}.visualstudio.com/${project}/_git/${repository}`;
@@ -269,7 +269,7 @@ export class GitProxy {
     let destPath: string;
 
     // set path hierarchy
-    if (this.options.serverType === 'azure-devops') {
+    if (this.options.stype === 'azure-devops') {
       destPath = path.join(this.rootPath, this.options.org, project, repository, branch);
     } else {
       destPath = path.join(this.rootPath, this.options.org, repository, branch);
@@ -296,7 +296,7 @@ export class GitProxy {
 
       this.log.sendToLog('=====>');
 
-      if (this.options.serverType === 'azure-devops') {
+      if (this.options.stype === 'azure-devops') {
         this.log.sendToLog(`Project: ${project} / Repository: ${repository} / Branch: ${branch}`);
       } else {
         this.log.sendToLog(`Repository: ${repository} / Branch: ${branch}`);
@@ -329,7 +329,7 @@ export class GitProxy {
     }
   }
   private _backupBranch(url: string, repository: string, branch: string, project?: string) {
-    if (this.options.serverType === 'azure-devops') {
+    if (this.options.stype === 'azure-devops') {
       console.log(`${project}/${repository} => ${url} (${branch})`);
     } else {
       console.log(`${repository} => ${url} (${branch})`);

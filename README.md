@@ -28,6 +28,7 @@ Options:
   -c, --clean Clean destination path
   -l, --log   Generate log
   -z, --zip   Compress backup to <path> + <file>.7z (if file is $ then use default filename.7z)
+  -t, --stype Server type (github, azure-devops)
   --settings  Settings file <config.json>
   -h          Show help          
 
@@ -35,3 +36,29 @@ Options:
  Note: 
  * Your GitHub token needs repo scope only.
  * **git** and **7z** need to be installed.
+
+ Samples:
+
+ GITHUB
+
+ {
+    "stype": "github",
+    "org": "MyOrg",
+    "token": "...",
+    "dest": "C:\\Temp",
+    "clean": true,
+    "log": true,
+    "zip": "C:\\Temp\\$"
+}
+
+AZURE
+
+{
+    "stype": "azure-devops",
+    "org": "MyOrg",
+    "token": "...",
+    "dest": "C:\\Temp",
+    "clean": true,
+    "log": true,
+    "zip": "C:\\Temp\\$"
+}
