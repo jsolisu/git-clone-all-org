@@ -4,4 +4,5 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *---------------------------------------------------------------------------------------------- */
 
-require('./../lib/index.js');
+// tslint:disable-next-line:no-var-requires
+require('../lib/index.js');
