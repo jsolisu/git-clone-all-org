@@ -230,9 +230,13 @@ export class GitProxy {
               try {
                 rimraf.sync(file);
               } catch (error) {
-                if ((error.code === 'EPERM') && (process.platform === 'win32')) {
-                  throw new Error(`cleanDestination: Please validate that the antivirus does not prevent to delete the path <${file}>.`)
-                } else { throw new Error(`cleanDestination: ${error}.`); }
+                if (error.code === 'EPERM' && process.platform === 'win32') {
+                  throw new Error(
+                    `cleanDestination: Please validate that the antivirus does not prevent to delete the path <${file}>.`,
+                  );
+                } else {
+                  throw new Error(`cleanDestination: ${error}.`);
+                }
               }
             });
         }
@@ -281,7 +285,6 @@ export class GitProxy {
 
     // If the branch is master, it is already cloned
     if (branch !== 'master') {
-      
       childProcess.execFileSync('git', ['checkout', branch], {
         env: process.env,
       });
