@@ -85,7 +85,7 @@ export class GitProxy {
   public getUserInfo() {
     if (this.options.stype === 'github') {
       return octokit.users
-        .get({})
+        .getAuthenticated({})
         .then((result: any) => {
           console.log(`Welcome ${result.data.name}${os.EOL}`);
         })
@@ -232,9 +232,15 @@ export class GitProxy {
               } catch (error) {
                 if (error.code === 'EPERM' && process.platform === 'win32') {
                   throw new Error(
-                    `cleanDestination: Please validate that the antivirus does not prevent to delete the path <${file}>.`,
+                    `cleanDestination: Please validate that the antivirus is not preventing to delete the path <${file}>.`,
                   );
-                } else {
+                } else
+                if (error.code === 'ENOTEMPTY' && process.platform === 'win32') {
+                  throw new Error(
+                    `cleanDestination: Please validate that TortoiseGit is not preventing to delete the path <${file}>.`,
+                  );
+                } else
+                {
                   throw new Error(`cleanDestination: ${error}.`);
                 }
               }

@@ -28,7 +28,7 @@ Options:
   -c, --clean Clean destination path
   -l, --log   Generate log
   -z, --zip   Compress backup to <path> + <file>.7z (if file is $ then use default filename.7z)
-  -t, --stype Server type (github, azure-devops)
+  -y, --stype Server type (github, azure-devops)
   --settings  Settings file <config.json>
   -h          Show help          
 

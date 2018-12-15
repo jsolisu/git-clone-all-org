@@ -39,8 +39,8 @@ const options = yargs
   .describe('c', 'Clean destination path')
   .alias('l', 'log')
   .describe('l', 'Generate log')
-  .alias('t', 'stype')
-  .describe('t', 'Server type (github, azure-devops)')
+  .alias('y', 'stype')
+  .describe('y', 'Server type (github, azure-devops)')
   .alias('z', 'zip')
   .describe('z', 'Compress backup to <path> + <file>.7z (if file is $ then use default filename.7z)')
   .config('settings', (configPath: string) => {
