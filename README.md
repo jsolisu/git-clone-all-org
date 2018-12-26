@@ -35,7 +35,7 @@ Options:
  ```
  Note: 
  * Your GitHub token needs repo scope only.
- * **git** and **7z** need to be installed.
+ * **git** and **7z** (p7zip-full on Linux) need to be installed.
 
  Samples:
 

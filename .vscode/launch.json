@@ -8,12 +8,22 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Iniciar programa",
+            "name": "Start program Windows",
             "program": "${workspaceFolder}\\lib\\index.js",
             "args": ["--settings",
                 "config.json",
             ],
             "preLaunchTask": "build git-clone-all-org"
-        }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Start program Linux",
+            "program": "${workspaceFolder}//lib//index.js",
+            "args": ["--settings",
+                "config.json",
+            ],
+            "preLaunchTask": "build git-clone-all-org"
+        }        
     ]
 }
