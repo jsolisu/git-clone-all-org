@@ -55,6 +55,14 @@ let rootPath = fixPath(process.cwd());
 function fixPath(pathToFix: string) {
   if (process.platform === 'win32') {
     return pathToFix.replace(/\\/g, '\\\\');
+  } else if (process.platform === 'linux') {
+    if (pathToFix === '~') {
+      return os.homedir();
+    }
+    if (pathToFix.slice(0, 2) !== '~/') {
+      return pathToFix;
+    }
+    return path.join(os.homedir(), pathToFix.slice(2));
   } else {
     return pathToFix;
   }
@@ -71,8 +79,9 @@ function checkForTools() {
 function initialize() {
   return new Promise((resolve, reject) => {
     if (options.dest) {
+      options.dest = fixPath(options.dest);
       if (fs.existsSync(options.dest)) {
-        rootPath = fixPath(options.dest);
+        rootPath = options.dest;
         proxy = new GitProxy(options, rootPath, new Log(rootPath, options.log, prodName));
         resolve(rootPath);
       } else {
@@ -87,11 +96,11 @@ function initialize() {
 
 function compressBackup() {
   return new Promise((resolve, reject) => {
-    if (process.platform === 'win32') {
       if (options.zip) {
         let destFile;
         const defaultFile = `git${moment(new Date()).format('YYYYMMDD')}.7z`;
 
+        options.zip = fixPath(options.zip);
         if (options.zip === 'true') {
           destFile = path.join(rootPath, defaultFile);
         } else {
@@ -119,10 +128,7 @@ function compressBackup() {
         }
       }
       resolve();
-    } else {
-      reject(new Error('compressBackup: Not supported.'));
-    }
-  });
+    });
 }
 
 (() => {
