@@ -122,7 +122,7 @@ function compressBackup() {
 
         console.log(`Compressing to <${destFile}>...`);
         try {
-          childProcess.execFileSync('7z', ['a', '-mx9', '-t7z', destFile, rootPath]);
+          childProcess.execFileSync('7z', ['a', '-t7z', destFile, rootPath]);
         } catch (error) {
           reject(new Error(`compressBackup: ${error}`));
         }
