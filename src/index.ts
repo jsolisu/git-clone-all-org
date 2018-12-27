@@ -43,7 +43,7 @@ const options = yargs
   .alias('y', 'stype')
   .describe('y', 'Server type (github, azure-devops)')
   .alias('z', 'zip')
-  .describe('z', 'Compress backup to <path> + <file>.7z (if file is $ then use default filename.7z)')
+  .describe('z', 'Compress backup to <path> + <file>.7z/.tar.bz2 (if file is $ then use default filename.7z/.tar.bz2)')
   .config('settings', (configPath: string) => {
     return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
   })
@@ -71,7 +71,13 @@ function fixPath(pathToFix: string) {
 
 function checkForTools() {
   return commandExists('git')
-    .then(() => commandExists('7z'))
+    .then(() => {
+      if (process.platform === 'win32') {
+        return commandExists('7z');
+      } else {
+        Promise.resolve();
+      }
+    })
     .catch(() => {
       throw new Error(`checkForTools: Please verify that all required software is installed.`);
     });
@@ -99,7 +105,9 @@ function compressBackup() {
   return new Promise((resolve, reject) => {
       if (options.zip) {
         let destFile;
-        const defaultFile = `git${moment(new Date()).format('YYYYMMDD')}.7z`;
+        const defaultFile = process.platform === 'win32' ? 
+          `git${moment(new Date()).format('YYYYMMDD')}.7z` : 
+          `git${moment(new Date()).format('YYYYMMDD')}.tar.bz2`;
 
         options.zip = fixPath(options.zip);
         if (options.zip === 'true') {
@@ -123,7 +131,11 @@ function compressBackup() {
 
         console.log(`Compressing to <${destFile}>...`);
         try {
-          childProcess.execFileSync('7z', ['a', '-t7z', destFile, rootPath]);
+          if (process.platform === 'linux') {
+            childProcess.execFileSync('tar', ['-cjSf', destFile, path.join(rootPath, options.org), 'git_clone_all_org.log']);
+          } else {
+            childProcess.execFileSync('7z', ['a', '-t7z', destFile, rootPath]);
+          }
         } catch (error) {
           reject(new Error(`compressBackup: ${error}`));
         }
