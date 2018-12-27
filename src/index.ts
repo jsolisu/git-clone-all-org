@@ -11,14 +11,10 @@ import * as packageData from '../package.json';
 import { GitProxy } from './GitProxy';
 import { Log } from './Log';
 
-// tslint:disable-next-line:no-var-requires
-const childProcess = require('child_process');
-// tslint:disable-next-line:no-var-requires
-const path = require('path');
-// tslint:disable-next-line:no-var-requires
-const commandExists = require('command-exists');
-// tslint:disable-next-line:no-var-requires
-const moment = require('moment');
+import childProcess = require('child_process');
+import commandExists = require('command-exists');
+import moment = require('moment');
+import path = require('path');
 
 const prodName = `${(packageData as any).name} version ${(packageData as any).version}`;
 const copyRight = `(c) 2018-2019 JSolisU`;
@@ -71,13 +67,7 @@ function fixPath(pathToFix: string) {
 
 function checkForTools() {
   return commandExists('git')
-    .then(() => {
-      if (process.platform === 'win32') {
-        return commandExists('7z');
-      } else {
-        Promise.resolve();
-      }
-    })
+    .then(() => commandExists('7z'))
     .catch(() => {
       throw new Error(`checkForTools: Please verify that all required software is installed.`);
     });
