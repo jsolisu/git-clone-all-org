@@ -21,7 +21,8 @@ const commandExists = require('command-exists');
 const moment = require('moment');
 
 const prodName = `${(packageData as any).name} version ${(packageData as any).version}`;
-console.log(`${prodName}${os.EOL}(c) 2018 JSolisU. MIT License.${os.EOL}`);
+const copyRight = `(c) 2018-2019 JSolisU`;
+console.log(`${prodName}${os.EOL}${copyRight}. MIT License.${os.EOL}`);
 
 const options = yargs
   .usage('Usage: $0 [options]')
