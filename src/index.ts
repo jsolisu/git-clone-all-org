@@ -43,7 +43,7 @@ const options = yargs
   .alias('y', 'stype')
   .describe('y', 'Server type (github, azure-devops)')
   .alias('z', 'zip')
-  .describe('z', 'Compress backup to <path> + <file>.7z/.tar.bz2 (if file is $ then use default filename.7z/.tar.bz2)')
+  .describe('z', 'Compress backup to <path> + <file>.7z/.tar.xz (if file is $ then use default filename.7z/.tar.xz)')
   .config('settings', (configPath: string) => {
     return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
   })
@@ -107,7 +107,7 @@ function compressBackup() {
         let destFile;
         const defaultFile = process.platform === 'win32' ? 
           `git${moment(new Date()).format('YYYYMMDD')}.7z` : 
-          `git${moment(new Date()).format('YYYYMMDD')}.tar.bz2`;
+          `git${moment(new Date()).format('YYYYMMDD')}.tar.xz`;
 
         options.zip = fixPath(options.zip);
         if (options.zip === 'true') {
@@ -132,7 +132,7 @@ function compressBackup() {
         console.log(`Compressing to <${destFile}>...`);
         try {
           if (process.platform === 'linux') {
-            childProcess.execFileSync('tar', ['-cjSf', destFile, path.join(rootPath, options.org), 'git_clone_all_org.log']);
+            childProcess.execFileSync('tar', ['-cJSf', destFile, path.join(rootPath, options.org), 'git_clone_all_org.log']);
           } else {
             childProcess.execFileSync('7z', ['a', '-t7z', destFile, rootPath]);
           }

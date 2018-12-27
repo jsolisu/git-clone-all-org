@@ -27,7 +27,7 @@ Options:
   -d, --dest  Destination path (-d "c:\\temp")
   -c, --clean Clean destination path
   -l, --log   Generate log
-  -z, --zip   Compress backup to <path> + <file>.7z/.tar.bz2 (if file is $ then use default filename.7z/.tar.bz2)
+  -z, --zip   Compress backup to <path> + <file>.7z/.tar.xz (if file is $ then use default filename.7z/.tar.xz)
   -y, --stype Server type (github, azure-devops)
   --settings  Settings file <config.json>
   -h          Show help          
