@@ -20,7 +20,8 @@ const prodName = `${(packageData as any).name} version ${(packageData as any).ve
 const copyRight = `(c) 2018-2019 JSolisU`;
 console.log(`${prodName}${os.EOL}${copyRight}. MIT License.${os.EOL}`);
 
-const options = yargs
+let options:any = {};
+options = yargs
   .usage('Usage: $0 [options]')
   .alias('o', 'org')
   .describe('o', 'Organization')
@@ -94,7 +95,7 @@ function initialize() {
 function compressBackup() {
   return new Promise((resolve, reject) => {
       if (options.zip) {
-        let destFile;
+        let destFile: string;
         const defaultFile = process.platform === 'win32' ? 
           `git${moment(new Date()).format('YYYYMMDD')}.7z` : 
           `git${moment(new Date()).format('YYYYMMDD')}.tar.xz`;

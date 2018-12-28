@@ -34,12 +34,12 @@
     "@types/command-exists": "^1.2.0",
     "@types/moment": "^2.13.0",
     "@types/rimraf": "^2.0.2",
-    "@types/yargs": "^11.1.1",
+    "@types/yargs": "^12.0.4",
     "azure-devops-node-api": "^6.6.3",
     "command-exists": "^1.2.8",
     "moment": "^2.23.0",
     "rimraf": "^2.6.2",
-    "yargs": "^11.1.0"
+    "yargs": "^12.0.5"
   },
   "devDependencies": {
     "@types/node": "^10.12.18",
