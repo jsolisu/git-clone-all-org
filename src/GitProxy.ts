@@ -128,40 +128,31 @@ export class GitProxy {
       this.log.startLog();
 
       if (this.options.stype === 'github') {
-        octokit.repos.listForOrg({ org: this.options.org, per_page: 100 }, (error: any, result: any) => {
-          if (error) {
-            reject(new Error(`getRepositories: ${error}`));
-          } else {
-            console.log(`${os.EOL}Repositories (${result.data.length}):${os.EOL}`);
-            let p = Promise.resolve();
-            result.data.forEach((repository: any) => {
-              p = p.then(
-                () =>
-                  // tslint:disable-next-line:no-shadowed-variable
-                  new Promise<void>(resolve => {
-                    octokit.repos.listBranches(
-                      { owner: this.options.org, repo: repository.name, per_page: 100 },
-                      // tslint:disable-next-line:no-shadowed-variable
-                      (error: any, result: any) => {
-                        if (error) {
-                          reject(new Error(`getRepositories: ${error}`));
-                        } else {
-                          result.data.forEach((branch: any) => {
-                            this._backupBranch(repository.html_url, repository.name, branch.name);
-                          });
-                        }
-                        resolve(); // p level
-                      },
-                    );
-                  }),
-              );
-            });
-            p.then(() => {
-              this._endLog(result.data.length);
+        octokit.repos.listForOrg({ org: this.options.org, per_page: 100 }).then((result: any) => {
+          console.log(`${os.EOL}Repositories (${result.data.length}):${os.EOL}`);
+          let p = Promise.resolve();
+          result.data.forEach((repository: any) => {
+            p = p.then(
+              () =>
+                // tslint:disable-next-line:no-shadowed-variable
+                new Promise<void>(resolve => {
+                  octokit.repos
+                    .listBranches({ owner: this.options.org, repo: repository.name, per_page: 100 })
+                    // tslint:disable-next-line:no-shadowed-variable
+                    .then((result: any) => {
+                      result.data.forEach((branch: any) => {
+                        this._backupBranch(repository.html_url, repository.name, branch.name);
+                      });
+                      resolve(); // p level
+                    });
+                }),
+            );
+          });
+          p.then(() => {
+            this._endLog(result.data.length);
 
-              resolve(result.headers); // main level
-            });
-          }
+            resolve(result.headers); // main level
+          });
         });
       } else if (this.options.stype === 'azure-devops') {
         const projects = await this.azgit.CoreApi.getProjects();

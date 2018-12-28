@@ -20,7 +20,7 @@ const prodName = `${(packageData as any).name} version ${(packageData as any).ve
 const copyRight = `(c) 2018-2019 JSolisU`;
 console.log(`${prodName}${os.EOL}${copyRight}. MIT License.${os.EOL}`);
 
-let options:any = {};
+let options: any = {};
 options = yargs
   .usage('Usage: $0 [options]')
   .alias('o', 'org')
@@ -94,45 +94,51 @@ function initialize() {
 
 function compressBackup() {
   return new Promise((resolve, reject) => {
-      if (options.zip) {
-        let destFile: string;
-        const defaultFile = process.platform === 'win32' ? 
-          `git${moment(new Date()).format('YYYYMMDD')}.7z` : 
-          `git${moment(new Date()).format('YYYYMMDD')}.tar.xz`;
+    if (options.zip) {
+      let destFile: string;
+      const defaultFile =
+        process.platform === 'win32'
+          ? `git${moment(new Date()).format('YYYYMMDD')}.7z`
+          : `git${moment(new Date()).format('YYYYMMDD')}.tar.xz`;
 
-        options.zip = fixPath(options.zip);
-        if (options.zip === 'true') {
-          destFile = path.join(rootPath, defaultFile);
+      options.zip = fixPath(options.zip);
+      if (options.zip === 'true') {
+        destFile = path.join(rootPath, defaultFile);
+      } else {
+        if (path.basename(options.zip) === '$') {
+          destFile = path.join(path.dirname(options.zip), defaultFile);
         } else {
-          if (path.basename(options.zip) === '$') {
-            destFile = path.join(path.dirname(options.zip), defaultFile);
-          } else {
-            destFile = options.zip;
-          }
+          destFile = options.zip;
         }
+      }
 
-        try {
-          console.log('Deleting compressed backup file...');
-          fs.unlinkSync(destFile);
-        } catch (error) {
-          if (error.code !== 'ENOENT') {
-            reject(new Error(`compressBackup: ${error}`));
-          }
-        }
-
-        console.log(`Compressing to <${destFile}>...`);
-        try {
-          if (process.platform === 'linux') {
-            childProcess.execFileSync('tar', ['-cJSf', destFile, path.join(rootPath, options.org), 'git_clone_all_org.log']);
-          } else {
-            childProcess.execFileSync('7z', ['a', '-t7z', destFile, rootPath]);
-          }
-        } catch (error) {
+      try {
+        console.log('Deleting compressed backup file...');
+        fs.unlinkSync(destFile);
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
           reject(new Error(`compressBackup: ${error}`));
         }
       }
-      resolve();
-    });
+
+      console.log(`Compressing to <${destFile}>...`);
+      try {
+        if (process.platform === 'linux') {
+          childProcess.execFileSync('tar', [
+            '-cJSf',
+            destFile,
+            path.join(rootPath, options.org),
+            'git_clone_all_org.log',
+          ]);
+        } else {
+          childProcess.execFileSync('7z', ['a', '-t7z', destFile, rootPath]);
+        }
+      } catch (error) {
+        reject(new Error(`compressBackup: ${error}`));
+      }
+    }
+    resolve();
+  });
 }
 
 (() => {
