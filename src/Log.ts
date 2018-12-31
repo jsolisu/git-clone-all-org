@@ -5,9 +5,7 @@
 
 import fs = require('fs');
 import os = require('os');
-
-// tslint:disable-next-line:no-var-requires
-const path = require('path');
+import path = require('path');
 
 export class Log {
   private log: string;

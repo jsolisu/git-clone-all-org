@@ -65,16 +65,21 @@ export class GitProxy {
           const authHandler = azdev.getPersonalAccessTokenHandler(this.options.token);
           const connection = new azdev.WebApi(`https://dev.azure.com/${this.options.org}`, authHandler);
 
-          const connectionData = await connection.connect();
+          let connectionData: ConnectionData;
+          try {
+            connectionData = await connection.connect();
 
-          // anonymous user ?
-          if (connectionData.authorizedUser.id === 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') {
+            // anonymous user ?
+            if (connectionData.authorizedUser.id === 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') {
+              reject(new Error('authenticate: Cannot connect to azure-devops.'));
+            } else {
+              this.azgit.GitApi = await connection.getGitApi();
+              this.azgit.CoreApi = await connection.getCoreApi();
+              this.azgit.connectionData = connectionData;
+              resolve();
+            }
+          } catch (e) {
             reject(new Error('authenticate: Cannot connect to azure-devops.'));
-          } else {
-            this.azgit.GitApi = await connection.getGitApi();
-            this.azgit.CoreApi = await connection.getCoreApi();
-            this.azgit.connectionData = connectionData;
-            resolve();
           }
         }
       } else {
@@ -122,36 +127,34 @@ export class GitProxy {
     }
   }
   public getRepositories() {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async resolve => {
       this.cleanDestination();
 
       this.log.startLog();
 
       if (this.options.stype === 'github') {
-        octokit.repos.listForOrg({ org: this.options.org, per_page: 100 }).then((result: any) => {
-          console.log(`${os.EOL}Repositories (${result.data.length}):${os.EOL}`);
+        octokit.repos.listForOrg({ org: this.options.org, per_page: 100 }).then((repositoryList: any) => {
+          console.log(`${os.EOL}Repositories (${repositoryList.data.length}):${os.EOL}`);
           let p = Promise.resolve();
-          result.data.forEach((repository: any) => {
+          repositoryList.data.forEach((repository: any) => {
             p = p.then(
               () =>
-                // tslint:disable-next-line:no-shadowed-variable
-                new Promise<void>(resolve => {
+                new Promise<void>(resolveRepository => {
                   octokit.repos
                     .listBranches({ owner: this.options.org, repo: repository.name, per_page: 100 })
-                    // tslint:disable-next-line:no-shadowed-variable
-                    .then((result: any) => {
-                      result.data.forEach((branch: any) => {
+                    .then((branchList: any) => {
+                      branchList.data.forEach((branch: any) => {
                         this._backupBranch(repository.html_url, repository.name, branch.name);
                       });
-                      resolve(); // p level
+                      resolveRepository(); // p level
                     });
                 }),
             );
           });
           p.then(() => {
-            this._endLog(result.data.length);
+            this._endLog(repositoryList.data.length);
 
-            resolve(result.headers); // main level
+            resolve(repositoryList.headers); // main level
           });
         });
       } else if (this.options.stype === 'azure-devops') {
@@ -163,8 +166,7 @@ export class GitProxy {
         projects.forEach(async (project: TeamProjectReference) => {
           p = p.then(
             () =>
-              // tslint:disable-next-line:no-shadowed-variable
-              new Promise<void>(async resolve => {
+              new Promise<void>(async resolveProject => {
                 const repositories = await this.azgit.GitApi.getRepositories(project.name);
                 console.log(`${os.EOL}[${project.name}] Repositories (${repositories.length}):${os.EOL}`);
                 totalRepositories += repositories.length;
@@ -172,19 +174,18 @@ export class GitProxy {
                 repositories.forEach((repository: GitRepository) => {
                   q = q.then(
                     () =>
-                      // tslint:disable-next-line:no-shadowed-variable
-                      new Promise<void>(async resolve => {
+                      new Promise<void>(async resolveRepository => {
                         const branches = await this.azgit.GitApi.getBranches(repository.name, project.name);
 
                         branches.forEach((branch: GitBranchStats) => {
                           this._backupBranch(repository.remoteUrl, repository.name, branch.name, project.name);
                         });
-                        resolve(); // q level
+                        resolveRepository(); // q level
                       }),
                   );
                 });
                 q.then(() => {
-                  resolve(); // p level
+                  resolveProject(); // p level
                 });
               }),
           );
