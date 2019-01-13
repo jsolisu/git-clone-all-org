@@ -70,7 +70,10 @@ export class GitProxy {
             connectionData = await connection.connect();
 
             // anonymous user ?
-            if (connectionData.authorizedUser.id === 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') {
+            if (
+              typeof connectionData.authorizedUser !== 'undefined' &&
+              connectionData.authorizedUser.id === 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            ) {
               reject(new Error('authenticate: Cannot connect to azure-devops.'));
             } else {
               this.azgit.GitApi = await connection.getGitApi();
@@ -100,7 +103,10 @@ export class GitProxy {
     }
     if (this.options.stype === 'azure-devops') {
       return new Promise((resolve, reject) => {
-        console.log(`Welcome ${this.azgit.connectionData.authenticatedUser.customDisplayName}${os.EOL}`);
+        if (typeof this.azgit.connectionData.authenticatedUser !== 'undefined') {
+          console.log(`Welcome ${this.azgit.connectionData.authenticatedUser.customDisplayName}${os.EOL}`);
+        }
+
         resolve();
       });
     }
@@ -175,10 +181,15 @@ export class GitProxy {
                   q = q.then(
                     () =>
                       new Promise<void>(async resolveRepository => {
-                        const branches = await this.azgit.GitApi.getBranches(repository.name, project.name);
+                        const branches = await this.azgit.GitApi.getBranches(repository.name || '', project.name);
 
                         branches.forEach((branch: GitBranchStats) => {
-                          this._backupBranch(repository.remoteUrl, repository.name, branch.name, project.name);
+                          this._backupBranch(
+                            repository.remoteUrl || '',
+                            repository.name || '',
+                            branch.name || '',
+                            project.name,
+                          );
                         });
                         resolveRepository(); // q level
                       }),
