@@ -30,7 +30,7 @@
   },
   "homepage": "https://jsolisu.visualstudio.com/git-clone-all-org/_git/git-clone-all-org",
   "dependencies": {
-    "@octokit/rest": "^16.3.0",
+    "@octokit/rest": "^16.8.1",
     "@types/command-exists": "^1.2.0",
     "@types/moment": "^2.13.0",
     "@types/rimraf": "^2.0.2",
