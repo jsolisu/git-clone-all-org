@@ -184,16 +184,24 @@ export class GitProxy {
                   q = q.then(
                     () =>
                       new Promise<void>(async resolveRepository => {
-                        const branches = await this.azgit.GitApi.getBranches(repository.name || '', project.name);
+                        try {
+                          const branches = await this.azgit.GitApi.getBranches(repository.name || '', project.name);
 
-                        branches.forEach((branch: GitBranchStats) => {
-                          this._backupBranch(
-                            repository.remoteUrl || '',
-                            repository.name || '',
-                            branch.name || '',
-                            project.name,
-                          );
-                        });
+                          branches.forEach((branch: GitBranchStats) => {
+                            this._backupBranch(
+                              repository.remoteUrl || '',
+                              repository.name || '',
+                              branch.name || '',
+                              project.name,
+                            );
+                          });
+                        } catch (error) {
+                          console.log('No branches.');
+                          totalRepositories--;
+
+                          resolveRepository(); // q level
+                        }
+
                         resolveRepository(); // q level
                       }),
                   );
@@ -254,7 +262,7 @@ export class GitProxy {
     }
   }
   private _endLog(totalRepositories: number) {
-    this.log.sendToLog(`Total repositories: ${totalRepositories}.`);
+    this.log.sendToLog(`Total of backed repositories: ${totalRepositories}.`);
     this.log.sendToLog('');
     this.log.endLog();
   }
