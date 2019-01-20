@@ -40,7 +40,7 @@ export class GitHubVCS extends BaseVCS {
     return octokit.users
       .getAuthenticated({})
       .then((result: any) => {
-        console.log(`Welcome ${result.data.name}${os.EOL}`);
+        console.log(`Welcome ${result.data.name} <${result.data.login}>${os.EOL}`);
       })
       .catch((error: any) => {
         throw new Error(`getUserInfo: ${error}`);

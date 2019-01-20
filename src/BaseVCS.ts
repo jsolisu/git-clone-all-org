@@ -7,10 +7,9 @@ import fs = require('fs');
 
 // tslint:disable-next-line:no-var-requires
 const childProcess = require('child_process');
-// tslint:disable-next-line:no-var-requires
-const path = require('path');
-// tslint:disable-next-line:no-var-requires
-const rimraf = require('rimraf');
+
+import path = require('path');
+import rimraf = require('rimraf');
 
 export class BaseVCS {
   protected options: any;

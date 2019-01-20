@@ -64,7 +64,9 @@ export class AzureDevOpsVCS extends BaseVCS {
       if (typeof this.azgit.connectionData.authenticatedUser !== 'undefined') {
         console.log(
           `Welcome ${this.azgit.connectionData.authenticatedUser.customDisplayName ||
-            this.azgit.connectionData.authenticatedUser.providerDisplayName}${os.EOL}`,
+            this.azgit.connectionData.authenticatedUser.providerDisplayName} <${
+            this.azgit.connectionData.authenticatedUser.properties.Account.$value
+          }>${os.EOL}`,
         );
       }
 
