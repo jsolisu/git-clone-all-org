@@ -104,7 +104,10 @@ export class GitProxy {
     if (this.options.stype === 'azure-devops') {
       return new Promise((resolve, reject) => {
         if (typeof this.azgit.connectionData.authenticatedUser !== 'undefined') {
-          console.log(`Welcome ${this.azgit.connectionData.authenticatedUser.customDisplayName}${os.EOL}`);
+          console.log(
+            `Welcome ${this.azgit.connectionData.authenticatedUser.customDisplayName ||
+              this.azgit.connectionData.authenticatedUser.providerDisplayName}${os.EOL}`,
+          );
         }
 
         resolve();
