@@ -8,13 +8,17 @@ import os = require('os');
 import * as yargs from 'yargs';
 
 import * as packageData from '../package.json';
-import { GitProxy } from './GitProxy';
+
+import { AzureDevOpsVCS } from './AzureDevOpsVCS';
+import { GitHubVCS } from './GitHubVCS';
+
 import { Log } from './Log';
 
 import childProcess = require('child_process');
 import commandExists = require('command-exists');
 import moment = require('moment');
 import path = require('path');
+import { BaseVCS } from './BaseVCS.js';
 
 const prodName = `${(packageData as any).name} version ${(packageData as any).version}`;
 const copyRight = `(c) 2018-2019 JSolisU`;
@@ -47,7 +51,12 @@ options = yargs
   .help('h')
   .demandOption(['o']).argv;
 
-let proxy: any = null;
+const backupVCS: any = [];
+// tslint:disable-next-line:no-string-literal
+backupVCS['github'] = GitHubVCS;
+backupVCS['azure-devops'] = AzureDevOpsVCS;
+
+let VCS: BaseVCS;
 let rootPath = fixPath(process.cwd());
 
 function fixPath(pathToFix: string) {
@@ -80,13 +89,13 @@ function initialize() {
       options.dest = fixPath(options.dest);
       if (fs.existsSync(options.dest)) {
         rootPath = options.dest;
-        proxy = new GitProxy(options, rootPath, new Log(rootPath, options.log, prodName));
+        VCS = new backupVCS[options.stype](options, rootPath, new Log(rootPath, options.log, prodName));
         resolve(rootPath);
       } else {
         reject(new Error(`Path <${options.dest}> not found.`));
       }
     } else {
-      proxy = new GitProxy(options, rootPath, new Log(rootPath, options.log, prodName));
+      VCS = new backupVCS[options.stype](options, rootPath, new Log(rootPath, options.log, prodName));
       resolve(rootPath);
     }
   });
@@ -144,10 +153,10 @@ function compressBackup() {
 (() => {
   checkForTools()
     .then(() => initialize())
-    .then(() => proxy.authenticate())
-    .then(() => proxy.getUserInfo())
-    .then(() => proxy.getOrgInfo())
-    .then(() => proxy.getRepositories())
+    .then(() => VCS.authenticate())
+    .then(() => VCS.getUserInfo())
+    .then(() => VCS.getOrgInfo())
+    .then(() => VCS.getRepositories())
     .then(() => compressBackup())
     .then(() => console.log('Done.'))
     .catch((error: any) => console.log(error.message));
