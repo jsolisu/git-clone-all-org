@@ -8,9 +8,9 @@ import path = require('path');
 
 import _octokit = require('@octokit/rest');
 import { BaseVCS } from './BaseVCS';
-const octokit = new _octokit();
-
 export class GitHubVCS extends BaseVCS {
+  private octokit: any;
+
   constructor(options: any, rootPath: string, log: any) {
     super(options, rootPath, log);
   }
@@ -21,15 +21,19 @@ export class GitHubVCS extends BaseVCS {
         if (!this.options.usr || !this.options.pwd) {
           reject(new Error('authenticate: Basic authentication requires both user and password parameters.'));
         }
-        octokit.authenticate({
-          password: this.options.pwd,
-          type: 'basic',
-          username: this.options.usr,
+
+        this.octokit = new _octokit({
+          auth: {
+            on2fa() {
+              return Promise.resolve('');
+            },
+            password: this.options.pwd,
+            username: this.options.usr,
+          },
         });
       } else {
-        octokit.authenticate({
-          token: this.options.token,
-          type: 'oauth',
+        this.octokit = new _octokit({
+          auth: `token ${this.options.token}`,
         });
       }
       resolve();
@@ -37,7 +41,7 @@ export class GitHubVCS extends BaseVCS {
   }
 
   public getUserInfo() {
-    return octokit.users
+    return this.octokit.users
       .getAuthenticated({})
       .then((result: any) => {
         console.log(`Welcome ${result.data.name} <${result.data.login}>${os.EOL}`);
@@ -48,7 +52,7 @@ export class GitHubVCS extends BaseVCS {
   }
 
   public getOrgInfo() {
-    return octokit.orgs
+    return this.octokit.orgs
       .get({ org: this.options.org })
       .then((result: any) => {
         console.log(`Info for [${result.data.login}] organization:`);
@@ -73,14 +77,14 @@ export class GitHubVCS extends BaseVCS {
 
       this.log.startLog();
 
-      octokit.repos.listForOrg({ org: this.options.org, per_page: 100 }).then((repositoryList: any) => {
+      this.octokit.repos.listForOrg({ org: this.options.org, per_page: 100 }).then((repositoryList: any) => {
         console.log(`${os.EOL}Repositories (${repositoryList.data.length}):${os.EOL}`);
         let p = Promise.resolve();
         repositoryList.data.forEach((repository: any) => {
           p = p.then(
             () =>
               new Promise<void>(resolveRepository => {
-                octokit.repos
+                this.octokit.repos
                   .listBranches({ owner: this.options.org, repo: repository.name, per_page: 100 })
                   .then((branchList: any) => {
                     branchList.data.forEach((branch: any) => {
