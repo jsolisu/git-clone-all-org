@@ -144,7 +144,7 @@ export class AzureDevOpsVCS extends BaseVCS {
   protected getRepoURL(repository: string, project?: string): string {
     if (this.options.token) {
       // oauth
-      return `https://${this.options.token}@${this.options.org}.visualstudio.com/${project}/_git/${repository}`;
+      return `https://${this.options.token}@dev.azure.com/${this.options.org}/${project}/_git/${repository}`;
     } else {
       throw new Error('Unsupported.');
     }
