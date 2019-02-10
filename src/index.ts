@@ -77,7 +77,13 @@ function fixPath(pathToFix: string) {
 
 function checkForTools() {
   return commandExists('git')
-    .then(() => commandExists('7z'))
+    .then(() => {
+      if (process.platform === 'win32') {
+        return commandExists('7z');
+      } else {
+        return Promise.resolve('7z');
+      }
+    })
     .catch(() => {
       throw new Error(`checkForTools: Please verify that all required software is installed.`);
     });
