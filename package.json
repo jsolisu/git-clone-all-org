@@ -38,10 +38,10 @@
     "command-exists": "^1.2.8",
     "moment": "^2.24.0",
     "rimraf": "^2.6.3",
-    "yargs": "^12.0.5"
+    "yargs": "^13.2.0"
   },
   "devDependencies": {
-    "@types/node": "^10.12.26",
+    "@types/node": "^11.9.4",
     "prettier": "^1.16.4",
     "tslint": "^5.12.1",
     "tslint-config-prettier": "^1.18.0",
