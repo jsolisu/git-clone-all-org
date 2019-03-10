@@ -30,7 +30,7 @@
   },
   "homepage": "https://jsolisu.visualstudio.com/git-clone-all-org/_git/git-clone-all-org",
   "dependencies": {
-    "@octokit/rest": "^16.16.3",
+    "@octokit/rest": "^16.17.0",
     "@types/command-exists": "^1.2.0",
     "@types/rimraf": "^2.0.2",
     "@types/yargs": "^12.0.9",
@@ -38,10 +38,10 @@
     "command-exists": "^1.2.8",
     "moment": "^2.24.0",
     "rimraf": "^2.6.3",
-    "yargs": "^13.2.1"
+    "yargs": "^13.2.2"
   },
   "devDependencies": {
-    "@types/node": "^11.10.4",
+    "@types/node": "^11.11.0",
     "prettier": "^1.16.4",
     "tslint": "^5.13.1",
     "tslint-config-prettier": "^1.18.0",
