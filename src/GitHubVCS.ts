@@ -6,7 +6,7 @@
 import os = require('os');
 import path = require('path');
 
-import _octokit = require('@octokit/rest');
+import { Octokit } from '@octokit/rest';
 import { BaseVCS } from './BaseVCS';
 export class GitHubVCS extends BaseVCS {
   private octokit: any;
@@ -22,7 +22,7 @@ export class GitHubVCS extends BaseVCS {
           reject(new Error('authenticate: Basic authentication requires both user and password parameters.'));
         }
 
-        this.octokit = new _octokit({
+        this.octokit = new Octokit({
           auth: {
             on2fa() {
               return Promise.resolve('');
@@ -32,7 +32,7 @@ export class GitHubVCS extends BaseVCS {
           },
         });
       } else {
-        this.octokit = new _octokit({
+        this.octokit = new Octokit({
           auth: `token ${this.options.token}`,
         });
       }
