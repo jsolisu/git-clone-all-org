@@ -52,13 +52,13 @@ export class BaseVCS {
       fs.readdir(this.rootPath, (err, files) => {
         if (!err) {
           files
-            .map(file => {
+            .map((file) => {
               return path.join(this.rootPath, file);
             })
-            .filter(file => {
+            .filter((file) => {
               return fs.statSync(file).isDirectory();
             })
-            .forEach(file => {
+            .forEach((file) => {
               console.log(`Deleting path <${file}>...`);
               try {
                 rimraf.sync(file);

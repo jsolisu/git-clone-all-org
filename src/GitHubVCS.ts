@@ -72,7 +72,7 @@ export class GitHubVCS extends BaseVCS {
   }
 
   public getRepositories() {
-    return new Promise(async resolve => {
+    return new Promise(async (resolve) => {
       this.cleanDestination();
 
       this.log.startLog();
@@ -83,7 +83,7 @@ export class GitHubVCS extends BaseVCS {
         repositoryList.data.forEach((repository: any) => {
           p = p.then(
             () =>
-              new Promise<void>(resolveRepository => {
+              new Promise<void>((resolveRepository) => {
                 this.octokit.repos
                   .listBranches({ owner: this.options.org, repo: repository.name, per_page: 100 })
                   .then((branchList: any) => {

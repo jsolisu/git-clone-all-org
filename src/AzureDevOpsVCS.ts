@@ -63,10 +63,10 @@ export class AzureDevOpsVCS extends BaseVCS {
     return new Promise((resolve, reject) => {
       if (typeof this.azgit.connectionData.authenticatedUser !== 'undefined') {
         console.log(
-          `Welcome ${this.azgit.connectionData.authenticatedUser.customDisplayName ||
-            this.azgit.connectionData.authenticatedUser.providerDisplayName} <${
-            this.azgit.connectionData.authenticatedUser.properties.Account.$value
-          }>${os.EOL}`,
+          `Welcome ${
+            this.azgit.connectionData.authenticatedUser.customDisplayName ||
+            this.azgit.connectionData.authenticatedUser.providerDisplayName
+          } <${this.azgit.connectionData.authenticatedUser.properties.Account.$value}>${os.EOL}`,
         );
       }
 
@@ -79,7 +79,7 @@ export class AzureDevOpsVCS extends BaseVCS {
   }
 
   public getRepositories() {
-    return new Promise(async resolve => {
+    return new Promise(async (resolve) => {
       this.cleanDestination();
 
       this.log.startLog();
@@ -92,7 +92,7 @@ export class AzureDevOpsVCS extends BaseVCS {
       projects.forEach(async (project: TeamProjectReference) => {
         p = p.then(
           () =>
-            new Promise<void>(async resolveProject => {
+            new Promise<void>(async (resolveProject) => {
               const repositories = await this.azgit.GitApi.getRepositories(project.name);
               console.log(`${os.EOL}[${project.name}] Repositories (${repositories.length}):${os.EOL}`);
               totalRepositories += repositories.length;
@@ -100,7 +100,7 @@ export class AzureDevOpsVCS extends BaseVCS {
               repositories.forEach((repository: GitRepository) => {
                 q = q.then(
                   () =>
-                    new Promise<void>(async resolveRepository => {
+                    new Promise<void>(async (resolveRepository) => {
                       try {
                         const branches = await this.azgit.GitApi.getBranches(repository.name || '', project.name);
 
