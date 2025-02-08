@@ -21,7 +21,7 @@ import path = require('path');
 import { BaseVCS } from './BaseVCS.js';
 
 const prodName = `${(packageData as any).name} version ${(packageData as any).version}`;
-const copyRight = `(c) 2018-2019 JSolisU`;
+const copyRight = `(c) 2018-2025 JSolisU`;
 console.log(`${prodName}${os.EOL}${copyRight}. MIT License.${os.EOL}`);
 
 let options: any = {};
