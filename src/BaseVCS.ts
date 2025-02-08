@@ -44,7 +44,7 @@ export class BaseVCS {
         console.log('Deleting log file...');
         fs.unlinkSync(path.join(this.rootPath, 'git_clone_all_org.log'));
       } catch (error) {
-        if (error.code !== 'ENOENT') {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
           throw new Error(`cleanDestination: ${error}`);
         }
       }
@@ -63,11 +63,11 @@ export class BaseVCS {
               try {
                 rimraf.sync(file);
               } catch (error) {
-                if (error.code === 'EPERM' && process.platform === 'win32') {
+                if ((error as NodeJS.ErrnoException).code === 'EPERM' && process.platform === 'win32') {
                   throw new Error(
                     `cleanDestination: Please validate that the antivirus is not preventing to delete the path <${file}>.`,
                   );
-                } else if (error.code === 'ENOTEMPTY' && process.platform === 'win32') {
+                } else if ((error as NodeJS.ErrnoException).code === 'ENOTEMPTY' && process.platform === 'win32') {
                   throw new Error(
                     `cleanDestination: Please validate that TortoiseGit is not preventing to delete the path <${file}>.`,
                   );

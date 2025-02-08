@@ -36,7 +36,7 @@ export class GitHubVCS extends BaseVCS {
           auth: `token ${this.options.token}`,
         });
       }
-      resolve();
+      resolve(1);
     });
   }
 

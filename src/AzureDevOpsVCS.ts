@@ -50,7 +50,7 @@ export class AzureDevOpsVCS extends BaseVCS {
             this.azgit.GitApi = await connection.getGitApi();
             this.azgit.CoreApi = await connection.getCoreApi();
             this.azgit.connectionData = connectionData;
-            resolve();
+            resolve(1);
           }
         } catch (e) {
           reject(new Error('authenticate: Cannot connect to azure-devops.'));
@@ -70,7 +70,7 @@ export class AzureDevOpsVCS extends BaseVCS {
         );
       }
 
-      resolve();
+      resolve(1);
     });
   }
 
@@ -131,7 +131,7 @@ export class AzureDevOpsVCS extends BaseVCS {
       });
       p.then(() => {
         this.endLog(totalRepositories);
-        resolve(); // main level
+        resolve(1); // main level
       });
     });
   }

@@ -131,7 +131,7 @@ function compressBackup() {
         console.log('Deleting compressed backup file...');
         fs.unlinkSync(destFile);
       } catch (error) {
-        if (error.code !== 'ENOENT') {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
           reject(new Error(`compressBackup: ${error}`));
         }
       }
@@ -152,7 +152,7 @@ function compressBackup() {
         reject(new Error(`compressBackup: ${error}`));
       }
     }
-    resolve();
+    resolve(1);
   });
 }
 
