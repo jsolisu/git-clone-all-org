@@ -1,21 +1,24 @@
 # git-clone-all-org
+
 Clone all organization branches from a Git Server.
 
-### Installation
+## Installation
 
 Windows
-```
+
+```text
 npm install -g git-clone-all-org
 ```
 
 Linux
-```
+
+```text
 sudo npm install -g git-clone-all-org
 ```
 
-### Usage
+## Usage
 
-```
+```text
 git-clone-all-org [options]
 
 Options:
@@ -33,15 +36,18 @@ Options:
   -h          Show help          
 
  ```
- Note: 
- * Your GitHub token needs repo scope only.
- * **git** and **7z** (only on Windows) need to be installed.
+
+ Note:
+
+* Your GitHub token needs repo scope only.
+* **git** and **7z** (only on Windows) need to be installed.
 
  Samples (put in a file like **config.json**):
 
  GITHUB
 
- {
+```json
+{
     "stype": "github",
     "org": "MyOrg",
     "token": "...",
@@ -50,9 +56,11 @@ Options:
     "log": true,
     "zip": "C:\\Temp\\$"
 }
+```
 
 AZURE
 
+```json
 {
     "stype": "azure-devops",
     "org": "MyOrg",
@@ -62,3 +70,4 @@ AZURE
     "log": true,
     "zip": "C:\\Temp\\$"
 }
+```
